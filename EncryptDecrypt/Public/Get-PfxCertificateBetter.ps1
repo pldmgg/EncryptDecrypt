@@ -1,38 +1,71 @@
-# Adds -password parameter to normal Get-PFXCertificate so that you can provide in advance and avoid prompt
+<#
+    .SYNOPSIS
+        Adds -Password parameter to the existing Get-PFXCertificate cmdlet in order to avoid prompt in the event
+        that a password is needed.
+
+    .DESCRIPTION
+        See .SYNOPSIS
+
+    .NOTES
+
+    .PARAMETER FilePath
+        This parameter is MANDATORY.
+
+    .PARAMETER LiteralPath
+        This parameter is MANDATORY.
+
+    .PARAMETER Password
+        This parameter is OPTIONAL.
+
+    .PARAMETER x509KeyStorageFlag
+        This parameter is OPTIONAL (however, it has a default value of 'DefaultKeySet')
+
+    .EXAMPLE
+        # Import the MiniLab Module and -
+
+        PS C:\Users\zeroadmin> Get-PfxCertificateBetter -Password "PlainTextPwd" -FilePath "$HOME\test.pfx"
+
+#>
 function Get-PfxCertificateBetter {
     [CmdletBinding(DefaultParameterSetName='ByPath')]
     param(
-        [Parameter(Position=0, Mandatory=$true, ParameterSetName='ByPath')] [string[]] $filePath,
-        [Parameter(Mandatory=$true, ParameterSetName='ByLiteralPath')] [string[]] $literalPath,
+        [Parameter(Position=0, Mandatory=$true, ParameterSetName='ByPath')]
+        [string[]]$FilePath,
+
+        [Parameter(Mandatory=$true, ParameterSetName='ByLiteralPath')]
+        [string[]]$LiteralPath,
 
         [Parameter(Position=1, ParameterSetName='ByPath')] 
-        [Parameter(Position=1, ParameterSetName='ByLiteralPath')] [string] $password,
+        [Parameter(Position=1, ParameterSetName='ByLiteralPath')]
+        [string]$Password,
 
         [Parameter(Position=2, ParameterSetName='ByPath')]
-        [Parameter(Position=2, ParameterSetName='ByLiteralPath')] [string] 
-        [ValidateSet('DefaultKeySet','Exportable','MachineKeySet','PersistKeySet','UserKeySet','UserProtected')] $x509KeyStorageFlag = 'DefaultKeySet'
+        [Parameter(Position=2, ParameterSetName='ByLiteralPath')] 
+        [ValidateSet('DefaultKeySet','Exportable','MachineKeySet','PersistKeySet','UserKeySet','UserProtected')]
+        [string]$x509KeyStorageFlag = 'DefaultKeySet'
     )
 
     if($PsCmdlet.ParameterSetName -eq 'ByPath'){
         $literalPath = Resolve-Path $filePath 
     }
 
-    if(!$password){
+    if(!$Password){
         # if the password parameter isn't present, just use the original cmdlet
-        $cert = Get-PfxCertificate -literalPath $literalPath
+        $cert = Get-PfxCertificate -LiteralPath $literalPath
     } else {
         # otherwise use the .NET implementation
         $cert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2
-        $cert.Import($literalPath, $password, $X509KeyStorageFlag)
+        $cert.Import($literalPath, $Password, $X509KeyStorageFlag)
     }
 
     return $cert
 }
+
 # SIG # Begin signature block
 # MIIMiAYJKoZIhvcNAQcCoIIMeTCCDHUCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUgetdwC43VknJ107jowPTKf+n
-# RTegggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUNiAvX2mX9p7e3vgsUTGcNQGh
+# ZfGgggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
 # 9w0BAQsFADAwMQwwCgYDVQQGEwNMQUIxDTALBgNVBAoTBFpFUk8xETAPBgNVBAMT
 # CFplcm9EQzAxMB4XDTE3MDkyMDIxMDM1OFoXDTE5MDkyMDIxMTM1OFowPTETMBEG
 # CgmSJomT8ixkARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMT
@@ -89,11 +122,11 @@ function Get-PfxCertificateBetter {
 # ARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMTB1plcm9TQ0EC
 # E1gAAAH5oOvjAv3166MAAQAAAfkwCQYFKw4DAhoFAKB4MBgGCisGAQQBgjcCAQwx
 # CjAIoAKAAKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcCAQQwHAYKKwYBBAGC
-# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFAP9wHeqCCb+ahFJ
-# nB1yXBdhjp6BMA0GCSqGSIb3DQEBAQUABIIBAAxJVzB1J86Inrb4rOndW+lAHVHP
-# 9Ldz4IBf6ZHv61mBgVlLyuorUqw9byh3jH4DJXsAzQPC/ho024VYwsxTx0j/b8jg
-# /H7ZCjsSUI52IMW04v651jXPHNlINpKKApXijxPOSTfPIsKiKZLvN60AG4toiLkw
-# sFc6ia7zAbAPP/nSTY8w79wXRWP8Xpc3pYRhgNFG5R4W1s1UdoJX0d8MS7PbkYGg
-# fvSWbw4y2+HcBFrqvhkMIgrrZRjuuALb3vXkf9n3e4JQuYY87DxtFX+ldhpN4xHZ
-# v/EfGi4nDRdb/lm7KxMKRCXE0CkofzK1KFwkl0ZOoJBhbtZ4xhK54OjR8qU=
+# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFMP5fnUHjryApNjr
+# WAhePQ+0d6pDMA0GCSqGSIb3DQEBAQUABIIBALwce7k5j65S17p5MyeFGpvDzfVv
+# ZFPGIGBpczL+Dn8eZAGZz8fpu9JKyIuAsUTbUOK0XK/d8VLAYC0DsWp4rjU9gm4w
+# 7S5RwXI4NWNv8Q41TK2XX7hstLjeq2WTsuM3+nr10CD1amBgoa9EAbqAEXrAAOzD
+# vMntlHG7IycmL5JNaPPpc71Kg9ZTUkatqBcq6I1xOI0XZ+PXTYDZWIM9/EHIsWc5
+# l245lVV0F/T5P3gBDJjpuG8Qmu7A5+dSQCu1qwffPT3wuet+x2zIWzSrwFbHsnwO
+# u0P2YlhLZH0E6ibJRuksywwuuXNIFqAOzxL5AzkSYT98obZ1KN9jHtwjJbU=
 # SIG # End signature block

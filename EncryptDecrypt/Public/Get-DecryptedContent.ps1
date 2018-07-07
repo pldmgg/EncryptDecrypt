@@ -34,7 +34,7 @@
         If -ContentToEncrypt is a string that represents a full path to a file, -SourceType should be "File".
         If -ContentToEncrypt is a string that represents a full path to a directory, -SourceType should be "Directory".
 
-    .PARAMETER ContentToEncrypt
+    .PARAMETER ContentToDecrypt
         Mandatory.
 
         This parameter takes a string that is either:
@@ -412,7 +412,7 @@ function Get-DecryptedContent {
         return
     }
 
-    if (!$PathToPfxFile -and !$CNofCertInStore {
+    if (!$PathToPfxFile -and !$CNofCertInStore) {
         Write-Error "You must use either the -PathToPfxFile or the -CNofCertInStore parameter! Halting!"
         $global:FunctionResult = "1"
         return
@@ -442,7 +442,7 @@ function Get-DecryptedContent {
                 $Cert1 = [System.Security.Cryptography.X509Certificates.X509Certificate2]::new($PathToPfxFile, $CertPwd, [System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]::Exportable)
             }
             catch {
-                $ErrMsg "Either the password supplied for the Private Key in $PathToPfxFile' is " +
+                $ErrMsg = "Either the password supplied for the Private Key in $PathToPfxFile' is " +
                 "incorrect or it is not marked as Exportable! Halting!"
                 Write-Error $ErrMsg
                 $global:FunctionResult = "1"
@@ -847,8 +847,8 @@ function Get-DecryptedContent {
 # SIG # Begin signature block
 # MIIMiAYJKoZIhvcNAQcCoIIMeTCCDHUCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUfikZh7p/kaRKcuZFDv108ALa
-# mbGgggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUroT9j5BqDFpp18h9y1ukYV0d
+# 1fSgggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
 # 9w0BAQsFADAwMQwwCgYDVQQGEwNMQUIxDTALBgNVBAoTBFpFUk8xETAPBgNVBAMT
 # CFplcm9EQzAxMB4XDTE3MDkyMDIxMDM1OFoXDTE5MDkyMDIxMTM1OFowPTETMBEG
 # CgmSJomT8ixkARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMT
@@ -905,11 +905,11 @@ function Get-DecryptedContent {
 # ARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMTB1plcm9TQ0EC
 # E1gAAAH5oOvjAv3166MAAQAAAfkwCQYFKw4DAhoFAKB4MBgGCisGAQQBgjcCAQwx
 # CjAIoAKAAKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcCAQQwHAYKKwYBBAGC
-# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFI57gMFb1MVYuWu6
-# PVBoeYHi4N48MA0GCSqGSIb3DQEBAQUABIIBALs5l2/eXV0ciznmd49idYfKEa0o
-# Sc3uDjBZyLFeH5Ob2s/HlVR2r6L8iSHdv6DA4sR6MZDoax9eCO2JsojImKrhkZDi
-# OBvUwqOTNG/NlIu2BjxmtfVJ2l6q0TgLWWqe2Z3nR21SS27qwtT+WltRXN2OvE5n
-# KcSYMjNvIsZP27s+EoHykfYkuB9kQSYpTtVoQkDaeNemIgdSKriKi+xtZrQKn/v4
-# NFWY70wOENo5XYrteaPPkGehoySHxyfdLpQskSUqEs1PqnrAZ7g36rE6KL0jZfGF
-# rj0bwGDtNnHdq620SektwX7tvpuCgtxBNI+JS+d5b2aMCApYWFOSea/xt/Q=
+# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFJ82ZXaQoL0t9Q6M
+# dQQbUiB7Bw7ZMA0GCSqGSIb3DQEBAQUABIIBALvwtfuEsvDcg97ALrSKvBsZoRXF
+# 2iwxwaYmKl6QqjnUraOgkinwK2mLt1oigzxc3bLXr/ZPSPXgOP9VqOEjXze9z4S4
+# l4D2WwtR14899fiES4npv9Qx3b9TP2QtVp5562E0DiHQ95jdkefj/bPP9txVSY1l
+# pUMChYMjHold15dJDl8YXx4C6EA5rVhw6KbQidq2PmpGZfHAJ1V/ee0rqPW8I3BB
+# N33wEZUkUm79EMoTKxTg4jOt7+kmKOSVbAOwlmw57dMG2m5EqVWXg/SragsSaOSx
+# etE1Q8bgA6h11MfnaqYX3SCkK7mLPVPfxVtwRfhawF+Be9VjS5sskHSnSMA=
 # SIG # End signature block

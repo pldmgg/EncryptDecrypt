@@ -8,10 +8,10 @@
 
     .NOTES
 
-    .PARAMETER MachineName
+    .PARAMETER CommonName
         This parameter is MANDATORY.
 
-        This parameter takes a string that represents the Subject Alternative Name (SAN) on the Self-Signed Certificate.
+        This parameter takes a string that represents the desired Common Name for the Self-Signed Certificate.
 
     .PARAMETER ExportDirectory
         This parameter is MANDATORY.
@@ -82,8 +82,8 @@ function Get-EncryptionCert {
 # SIG # Begin signature block
 # MIIMiAYJKoZIhvcNAQcCoIIMeTCCDHUCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQU4Pqz1eX2Rlxr7eelJNlxBSYe
-# eimgggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUMqr4HM0rOzL0L+UOqtDI1K6i
+# qL+gggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
 # 9w0BAQsFADAwMQwwCgYDVQQGEwNMQUIxDTALBgNVBAoTBFpFUk8xETAPBgNVBAMT
 # CFplcm9EQzAxMB4XDTE3MDkyMDIxMDM1OFoXDTE5MDkyMDIxMTM1OFowPTETMBEG
 # CgmSJomT8ixkARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMT
@@ -140,11 +140,11 @@ function Get-EncryptionCert {
 # ARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMTB1plcm9TQ0EC
 # E1gAAAH5oOvjAv3166MAAQAAAfkwCQYFKw4DAhoFAKB4MBgGCisGAQQBgjcCAQwx
 # CjAIoAKAAKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcCAQQwHAYKKwYBBAGC
-# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFMfcOzm4aI0/ZXao
-# tydMYn5QXxx9MA0GCSqGSIb3DQEBAQUABIIBAJFf/fiGHUkuEb6tB8PUlvLXjyt3
-# UiQaKZKls3+g6Ku/wBL/EbA2d8KxLSKq2WACfBzN59NPH9q9xi0NA+CHkBGov3x/
-# Mm0JcaYWc7SMxDgMt4jxmQMFLm5uiEzNr7/Z1nIzETMUXoKPzGOcHGd6bMEtg8xg
-# H9ksAxp6GVG9Q7m/GsQY5a+sU0Rhq0WjSbelcyQPsMA6oyOkVducekTeroSBWQua
-# swBhEr1awfMI3DRfrAJjHVVsCZuu2DLBKtZI+YkkBaj0CnyLDpc6vw0aruNREzln
-# +xoL/LHgbXI9vvLcN6jdaszV7/7BrHOeE8Yi8IG7hmh/t0Yl4kQAEoRkuB0=
+# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFB28UVDCpVK+ipPj
+# GeCPiAqwybFoMA0GCSqGSIb3DQEBAQUABIIBAFwnSV5Gm3ilH5K4Au3o7LHt8OXJ
+# SfJ4PygNN57LA3zkm7p4I8twJLh4mpzxgNqZkzzZPw2itYjI1+bgZVCBpVDwxqXj
+# 0kJ5db1XqbZUPKhNpOT2I5Yte39J/L71MjMT+1IRcYnQiDFjLx7pOdWbb7iQCH5T
+# /f12Ai/MQp/bovkfHqIyTdiLEuqhAFxtGksAX83ufAW0rAOwXNU26H0uOQRAH/ak
+# qUkYrFtMgXACJy90BcbkVYT3lqd8QI58pK/5vTyTSW0+naeFXlDltFY9xwOAhK5b
+# Gn5X3uezyXy1J+zSZ9GrvWHk+OMryaLYjbaIOn0bRZCkt9GA0vnkdNkP4tk=
 # SIG # End signature block

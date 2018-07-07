@@ -154,14 +154,12 @@ function Extract-PfxCerts {
 
     ##### BEGIN Parameter Validation #####
     if (!$(Test-Path $PFXFilePath)) {
-        Write-Verbose "The path $PFXFilePath was not found! Halting!"
         Write-Error "The path $PFXFilePath was not found! Halting!"
         $global:FunctionResult = "1"
         return
     }
 
     if (! $(Test-Path $OutputDirectory)) {
-        Write-Verbose "The path $OutputDirectory was not found! Halting!"
         Write-Error "The path $OutputDirectory was not found! Halting!"
         $global:FunctionResult = "1"
         return
@@ -414,11 +412,12 @@ function Extract-PfxCerts {
     ##### END Main Body #####
 
 }
+
 # SIG # Begin signature block
 # MIIMiAYJKoZIhvcNAQcCoIIMeTCCDHUCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUREIKN+qVafKUVN6Mtxp5M8vK
-# Ifugggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUkM55m9nYv3laVG2LV7+KzzKJ
+# 9iCgggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
 # 9w0BAQsFADAwMQwwCgYDVQQGEwNMQUIxDTALBgNVBAoTBFpFUk8xETAPBgNVBAMT
 # CFplcm9EQzAxMB4XDTE3MDkyMDIxMDM1OFoXDTE5MDkyMDIxMTM1OFowPTETMBEG
 # CgmSJomT8ixkARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMT
@@ -475,11 +474,11 @@ function Extract-PfxCerts {
 # ARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMTB1plcm9TQ0EC
 # E1gAAAH5oOvjAv3166MAAQAAAfkwCQYFKw4DAhoFAKB4MBgGCisGAQQBgjcCAQwx
 # CjAIoAKAAKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcCAQQwHAYKKwYBBAGC
-# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFOE0R7bhsQ7foCtd
-# rJDnlfDE9jF5MA0GCSqGSIb3DQEBAQUABIIBAHbeJFbfaGE2zLtS0QYeC67P2is0
-# eQXUcb/Bkhpdat0JZ7Y7Djqx+sYsURYNKxSrshlRdW9ldqoAPcv2CW8iQZukHt8H
-# QKVksigFMg9qfTHxy6K2q5GSMKXwy9uDmWT0l0gmn3228U3DopO/4755Y+ymez6o
-# Pz4l3TBPQhb0TRsH2L0rkZxPTpnmJRfeDoKCNOe7yMoKqnnDVAdBlBvDB+UAIceF
-# JuXmWbxWewK5ONdjuTqd1eqpwQZE7KWXRVNJFlurjD6ZgVUBhJEciujJNNiX5E7f
-# u+wM11cWu5oeJGz9H0jY+I2mCOz0xrx0SMh1g83JhEAF1sbfwGOwjEurxLg=
+# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFLWsTFgQpytV+wWF
+# Jb7FmrJqjZW8MA0GCSqGSIb3DQEBAQUABIIBAIPtvFVYRxRfAV8m6MdPenAoWV9d
+# AZFn67V59GSHBAuAFYA4oapY2cyGygAX/vQDS8cUTjQMILPTly9C+zvWNmkXdBRs
+# t7Om2Bu+si9zXr6hTUlZE8bUingDYF/mtgIvqgOS+TOdSuMP2J9Mw33+yDV7jPCd
+# MybIYdfgb/S5zxP28KJ4A/9GYK+Yeqz2ceD4ZU0rOH15n2opvNgMPnmowy5+OaLG
+# SPhXOppUrnTNPU+A7cLwFaOj7Bki12Zi4iq0KN0FbI4mOD37XvaA0QVaA9Ngykrm
+# i5CU5XCPXwJ/r2HStsjUjZ63Jug/KWcD6P6n/RNSYOFMp1A+e7E2lh38kzo=
 # SIG # End signature block

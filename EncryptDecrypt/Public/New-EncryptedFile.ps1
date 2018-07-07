@@ -74,8 +74,8 @@
     .PARAMETER PathToPfxFile
         Optional.
 
-        This parameter takes a string that represents the full path to a .pfx file. The public certificate in the
-        .pfx file will be used for RSA encryption.
+        This parameter takes a string that represents the full path to a .pfx file. The public certificate in
+        the .pfx file will be used for RSA encryption.
 
         NOTE: RSA encryption is ALWAYS used by this function, either to encrypt the information directly or to encrypt the
         AES Key that was used to encrypt the information.
@@ -240,8 +240,6 @@
         RSAEncryptedAESKeyLocation         : C:\Users\zeroadmin\tempdir\tempdir.aeskey.rsaencrypted
         AllFileOutputs                     : {C:\Users\zeroadmin\tempdir\agricola.txt.aesencrypted, C:\Users\zeroadmin\tempdir\dolor.txt.aesencrypted,
                                             C:\Users\zeroadmin\tempdir\lorumipsum.txt.aesencrypted, C:\Users\zeroadmin\tempdir\agricola.txt.original...}
-
-
 #>
 function New-EncryptedFile {
     [CmdletBinding()]
@@ -375,7 +373,7 @@ function New-EncryptedFile {
                 $Cert1 = [System.Security.Cryptography.X509Certificates.X509Certificate2]::new($PathToPfxFile, $CertPwd, [System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]::Exportable)
             }
             catch {
-                $ErrMsg "Either the password supplied for the Private Key in $PathToPfxFile' is " +
+                $ErrMsg = "Either the password supplied for the Private Key in $PathToPfxFile' is " +
                 "incorrect or it is not marked as Exportable! Halting!"
                 Write-Error $ErrMsg
                 $global:FunctionResult = "1"
@@ -778,11 +776,12 @@ function New-EncryptedFile {
 
     ##### END Main Body #####
 }
+
 # SIG # Begin signature block
 # MIIMiAYJKoZIhvcNAQcCoIIMeTCCDHUCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUZxwV1X4YFaeVXEjiaPouaw+T
-# ETmgggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQU6kx3Goqq9R+LadADItY3KvhL
+# CdCgggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
 # 9w0BAQsFADAwMQwwCgYDVQQGEwNMQUIxDTALBgNVBAoTBFpFUk8xETAPBgNVBAMT
 # CFplcm9EQzAxMB4XDTE3MDkyMDIxMDM1OFoXDTE5MDkyMDIxMTM1OFowPTETMBEG
 # CgmSJomT8ixkARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMT
@@ -839,11 +838,11 @@ function New-EncryptedFile {
 # ARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMTB1plcm9TQ0EC
 # E1gAAAH5oOvjAv3166MAAQAAAfkwCQYFKw4DAhoFAKB4MBgGCisGAQQBgjcCAQwx
 # CjAIoAKAAKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcCAQQwHAYKKwYBBAGC
-# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFN21H95wxAlJXNyM
-# ThevVxfDjl3qMA0GCSqGSIb3DQEBAQUABIIBAFRxwM/6OepvLFJMIccBxhvrdzmw
-# gRtfGSOBtUj5tDZKz8zloglnnYVdAoq2vdsg8MoRCJrORmJU13MKUn+sE89oNL27
-# j12V2lw9Fm7FC4j8/1+B5XwTFjuqAFQFwIGNb+bIFubG7Z4+TS54SDiNq98+KgNq
-# V4fzBZmz42BY/Tg1FDG1ZX5wv7KZ1th1n3Jw+E1z7LvGb+DLW3L22fe9lK5jHu3w
-# loLkHslwq2SedtEFkAA9as2cu+hM7BsIzun/+MOemIhnFf0XuiafRRWNQWy2nGK6
-# jehwgujWah6inGetpYPGYhG7fjcdDEHKtaHeWzmWGHzrta+pVHJ9ba+1Les=
+# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFHojjutXUc5wgHkA
+# b9wBQCEi1CQvMA0GCSqGSIb3DQEBAQUABIIBABg/xnFacDc6O82sdG7sLORZG5Zr
+# fw2RsboHrHh7J+hIIas+taaqwPwcB3TCCc915P3CcHIktheneW/w85Wa7Nt6McRB
+# uRRsMipZeGUvaPJ48pVY6Q+eMXbBR6SHXbKQXCgcQNO5epRylEUXlL3W1B2TIQnh
+# /qCDxQ1iTFNnhNDt4tm++KISk4f2TNyAH+JSsSSxahjAkRv7jwxNsx2eWlVlviwn
+# yGFQ/c5+tZQ3tDl8XfJX0KfXmSVdt2lqctHlyNauKWFNbTTKtFjnZuXebUIxCz5l
+# oDBIVNPuefvngKn7oJ+VhPs5PeoH1NzWJMwStOsiktZhX1AUJbpDrO9n2AE=
 # SIG # End signature block

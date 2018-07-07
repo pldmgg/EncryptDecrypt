@@ -71,6 +71,12 @@
         certs and the key are written to separate files in -TempOutputDirectory. This parameter removes these file outputs at the
         conclusion of the function. This parameter is set to $true by default.
 
+    .PARAMETER DownloadAndAddOpenSSLToPath
+        Optional.
+
+        If openssl.exe is not already on your localhost and part of your $env:Path, use this parameter to download
+        openssl.exe / add it to your $env:Path
+
     .EXAMPLE
         # If the private key in the .pfx is password protected...
         PS C:\Users\zeroadmin> $CertPwd = Read-Host -Prompt "Please enter the Certificate's Private Key password" -AsSecureString
@@ -213,11 +219,12 @@ function Get-PrivateKeyProperty {
     ##### END Main Body #####
 
 }
+
 # SIG # Begin signature block
 # MIIMiAYJKoZIhvcNAQcCoIIMeTCCDHUCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQURja3lQtTZUTGBZjj+RkT9SIM
-# J5ugggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUdSjN1oI1A+ivL4fwLgLI+zBu
+# r26gggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
 # 9w0BAQsFADAwMQwwCgYDVQQGEwNMQUIxDTALBgNVBAoTBFpFUk8xETAPBgNVBAMT
 # CFplcm9EQzAxMB4XDTE3MDkyMDIxMDM1OFoXDTE5MDkyMDIxMTM1OFowPTETMBEG
 # CgmSJomT8ixkARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMT
@@ -274,11 +281,11 @@ function Get-PrivateKeyProperty {
 # ARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMTB1plcm9TQ0EC
 # E1gAAAH5oOvjAv3166MAAQAAAfkwCQYFKw4DAhoFAKB4MBgGCisGAQQBgjcCAQwx
 # CjAIoAKAAKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcCAQQwHAYKKwYBBAGC
-# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFAFRJxM6y0FiyJw1
-# PrB410UU9JiuMA0GCSqGSIb3DQEBAQUABIIBAD1j0IjhrOhtEytNwRD0bs4FPPBd
-# DQp5djPKeJY9nuNn9ajFvtijQNq07SfWBTfhYy6vuc/pq6LbUz0RJIEeYtYxRsVa
-# 3a/bpF5g4CdHYQ1XO1E6RbRbowDIk97Jj3N+AP5HWRng/1l/3PCL1foFFPzbBk6T
-# 2Srxy1H8fjIDBQDLoWW+wOpSd9PcKO41mK9yOdEy2JISOG/5YWXxnCU5/ksj2Tp9
-# aCSlIPMvroW7HnDttOl5gz9EEwAWUQHw7FKBrnNLBiYrLV6JzqF8ru2EzdFqSNVo
-# x6AWUy8BSZB46NrEDKbDx5g5CtsiwpkTcxWF+bpfBMo64EsoVbZsl62nk5Y=
+# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFDPZn8jtSFh9EDfG
+# 5AEsvIL/u2cpMA0GCSqGSIb3DQEBAQUABIIBAG6TlepJsC2Jk1LvSIl5q+zrMrsI
+# Ja8PZVLiT1OO98m5sFWqwM+jFsOIikIhy8Zt+e0UdbaRsvgNPb1hzpnudR1DyFCQ
+# JLElF5jjqOgNYN6EzWbplvnQ0EYsx2J3SgB/T5AikkVc5M4SytnvrXRn9wUGC3TE
+# +OaXilVmA0dSmeyQJvV/9XWhBsC/CahXv56ZymupTAXtBBojb+EnXLkXNVI0aDqx
+# 0R/KEH8Wkz6M073BCSqRw7NR2Ve1bY4b3+FU5BY91I3ev90l0tHd6hmWZ36phiTO
+# xuFg/azWdZN/7lRj7ZBfkKOKrU62UhV0Azn7JHEkfIcY7DP9RcmFobwa8aI=
 # SIG # End signature block
