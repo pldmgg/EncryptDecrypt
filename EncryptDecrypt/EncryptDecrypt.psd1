@@ -24,7 +24,7 @@ GUID = '83435dfe-0ce5-4e7f-8b56-b129a739ffe3'
 Author = 'pldmgg'
 
 # Company or vendor of this module
-CompanyName = 'Boop'
+CompanyName = 'pldmgg'
 
 # Copyright statement for this module
 Copyright = '(c) 2018 pldmgg. All rights reserved.'
