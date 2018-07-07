@@ -1004,17 +1004,41 @@ function Get-DecryptedContent {
                 $EncryptedBase64String = Get-Content $AESKeyLocation
                 $EncryptedBytes2 = [System.Convert]::FromBase64String($EncryptedBase64String)
                 #$EncryptedBytes2 = [System.IO.File]::ReadAllBytes($AESKeyLocation)
-                if ($PrivateKeyInfo) {
-                    #$DecryptedBytes2 = $PrivateKeyInfo.Decrypt($EncryptedBytes2, $true)
-                    $DecryptedBytes2 = $PrivateKeyInfo.Decrypt($EncryptedBytes2, [System.Security.Cryptography.RSAEncryptionPadding]::OaepSHA256)
+                try {
+                    if ($PrivateKeyInfo) {
+                        #$DecryptedBytes2 = $PrivateKeyInfo.Decrypt($EncryptedBytes2, $true)
+                        $DecryptedBytes2 = $PrivateKeyInfo.Decrypt($EncryptedBytes2, [System.Security.Cryptography.RSAEncryptionPadding]::OaepSHA256)
+                    }
+                    else {
+                        #$DecryptedBytes2 = $Cert1.PrivateKey.Decrypt($EncryptedBytes2, $true)
+                        $DecryptedBytes2 = $Cert1.PrivateKey.Decrypt($EncryptedBytes2, [System.Security.Cryptography.RSAEncryptionPadding]::OaepSHA256)
+                    }
+                }
+                catch {
+                    try {
+                        if ($PrivateKeyInfo) {
+                            #$DecryptedBytes2 = $PrivateKeyInfo.Decrypt($EncryptedBytes2, $true)
+                            $DecryptedBytes2 = $PrivateKeyInfo.Decrypt($EncryptedBytes2, [System.Security.Cryptography.RSAEncryptionPadding]::Pkcs1)
+                        }
+                        else {
+                            #$DecryptedBytes2 = $Cert1.PrivateKey.Decrypt($EncryptedBytes2, $true)
+                            $DecryptedBytes2 = $Cert1.PrivateKey.Decrypt($EncryptedBytes2, [System.Security.Cryptography.RSAEncryptionPadding]::Pkcs1)
+                        }
+                    }
+                    catch {
+                        Write-Error "Problem decrypting the file that contains the AES Key (i.e. '$AESKeyLocation')! Halting!"
+                        $global:FunctionResult = "1"
+                        return
+                    }
+                }
+                
+                if ($PSVersionTable.PSEdition -eq "Core") {
+                    $DecryptedContent2 = [system.text.encoding]::UTF8.GetString($DecryptedBytes2)
                 }
                 else {
-                    #$DecryptedBytes2 = $Cert1.PrivateKey.Decrypt($EncryptedBytes2, $true)
-                    $DecryptedBytes2 = $Cert1.PrivateKey.Decrypt($EncryptedBytes2, [System.Security.Cryptography.RSAEncryptionPadding]::OaepSHA256)
+                    $DecryptedContent2 = [system.text.encoding]::Unicode.GetString($DecryptedBytes2)
                 }
-                #$AESKey = [System.Convert]::ToBase64String($DecryptedBytes2)
-                $DecryptedContent2 = [system.text.encoding]::Unicode.GetString($DecryptedBytes2)
-                #$DecryptedContent2 = [system.text.encoding]::UTF8.GetString($DecryptedBytes2)
+
                 # Need to write $DecryptedContent2 to tempfile to strip BOM if present
                 $tmpFile = [IO.Path]::GetTempFileName()
                 [System.IO.File]::WriteAllLines($tmpFile, $DecryptedContent2.Trim())
@@ -2413,7 +2437,8 @@ function New-EncryptedFile {
 
 
         # Determine if the contents of the File is too long for Asymetric RSA Encryption with pub cert and priv key
-        $EncodedBytes1 = Get-Content $ContentToEncrypt -Encoding Byte -ReadCount 0
+        #$EncodedBytes1 = Get-Content $ContentToEncrypt -Encoding Byte -ReadCount 0
+        $EncodedBytes1 = [System.IO.File]::ReadAllBytes($ContentToEncrypt)
 
         # If the file content is small enough, encrypt via RSA
         if ($EncodedBytes1.Length -lt $MaxNumberOfBytesThatCanBeEncryptedViaRSA) {
@@ -2445,7 +2470,8 @@ function New-EncryptedFile {
 
             # Encrypt the AESKey File using RSA asymetric encryption
             # NOTE: When Get-Content's -ReadCount is 0, all content is read in one fell swoop, so it's not an array of lines
-            $EncodedBytes1 = Get-Content "$AESKeyDir\$AESKeyFileNameSansExt.aeskey" -Encoding Byte -ReadCount 0
+            #$EncodedBytes1 = Get-Content "$AESKeyDir\$AESKeyFileNameSansExt.aeskey" -Encoding Byte -ReadCount 0
+            $EncodedBytes1 = [System.IO.File]::ReadAllBytes("$AESKeyDir\$AESKeyFileNameSansExt.aeskey")
             #$EncryptedBytes1 = $Cert1.PublicKey.Key.Encrypt($EncodedBytes1, $true)
             try {
                 $EncryptedBytes1 = $Cert1.PublicKey.Key.Encrypt($EncodedBytes1, [System.Security.Cryptography.RSAEncryptionPadding]::OaepSHA256)
@@ -2458,7 +2484,7 @@ function New-EncryptedFile {
             Remove-Item "$AESKeyDir\$AESKeyFileNameSansExt.aeskey"
         }
 
-        $FileEncryptedViaRSA = if (!$AESKey) {"$OriginalFileName.rsaencrypted"}
+        $FileEncryptedViaRSA = if (!$AESKey) {"$OriginalFile.rsaencrypted"}
         $FileEncryptedViaAES = if ($AESKey) {$FileEncryptionInfo.FilesEncryptedwAESKey}
         $RSAEncryptedAESKeyLocation = if ($AESKey) {"$AESKeyDir\$AESKeyFileNameSansExt.aeskey.rsaencrypted"}
         $RSAEncryptedFileName = if ($FileEncryptedViaRSA) {$FileEncryptedViaRSA}
@@ -2504,7 +2530,8 @@ function New-EncryptedFile {
         [array]$FilesToEncryptViaAES = @()
         foreach ($file in $FilesToEncryptPrep) {
             # Determine if the contents of the File is too long for Asymetric RSA Encryption with pub cert and priv key
-            $EncodedBytes1 = Get-Content $file -Encoding Byte -ReadCount 0
+            #$EncodedBytes1 = Get-Content $file -Encoding Byte -ReadCount 0
+            $EncodedBytes1 = [System.IO.File]::ReadAllBytes($file)
 
             # If the file content is small enough, encrypt via RSA
             if ($EncodedBytes1.Length -lt $MaxNumberOfBytesThatCanBeEncryptedViaRSA) {
@@ -2521,7 +2548,8 @@ function New-EncryptedFile {
 
         # Start Doing the Encryption
         foreach ($file in $FilesToEncryptViaRSA) {
-            $EncodedBytes1 = Get-Content $file -Encoding Byte -ReadCount 0
+            #$EncodedBytes1 = Get-Content $file -Encoding Byte -ReadCount 0
+            $EncodedBytes1 = [System.IO.File]::ReadAllBytes($file)
             #$EncryptedBytes1 = $Cert1.PublicKey.Key.Encrypt($EncodedBytes1, $true)
             try {
                 $EncryptedBytes1 = $Cert1.PublicKey.Key.Encrypt($EncodedBytes1, [System.Security.Cryptography.RSAEncryptionPadding]::OaepSHA256)
@@ -2545,7 +2573,8 @@ function New-EncryptedFile {
 
         # Encrypt the AESKey File using RSA asymetric encryption
         # NOTE: When Get-Content's -ReadCount is 0, all content is read in one fell swoop, so it's not an array of lines
-        $EncodedBytes1 = Get-Content "$AESKeyDir\$AESKeyFileName" -Encoding Byte -ReadCount 0
+        #$EncodedBytes1 = Get-Content "$AESKeyDir\$AESKeyFileName" -Encoding Byte -ReadCount 0
+        $EncodedBytes1 = [System.IO.File]::ReadAllBytes("$AESKeyDir\$AESKeyFileName")
         #$EncryptedBytes1 = $Cert1.PublicKey.Key.Encrypt($EncodedBytes1, $true)
         try {
             $EncryptedBytes1 = $Cert1.PublicKey.Key.Encrypt($EncodedBytes1, [System.Security.Cryptography.RSAEncryptionPadding]::OaepSHA256)
@@ -2992,7 +3021,8 @@ function New-SelfSignedCertificateEx {
     $PFXExportEEOnly,
     $Base64
    )
-   Set-Content -Path $Path -Value ([Convert]::FromBase64String($PFXString)) -Encoding Byte
+   #Set-Content -Path $Path -Value ([Convert]::FromBase64String($PFXString)) -Encoding Byte
+   [System.IO.File]::WriteAllBytes($Path, $([Convert]::FromBase64String($PFXString)))
   }
  }
 }
@@ -3005,8 +3035,8 @@ if (Test-Path "$PSScriptRoot\VariableLibrary.ps1") {
 # SIG # Begin signature block
 # MIIMiAYJKoZIhvcNAQcCoIIMeTCCDHUCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUiJWzlXhgWfuMzQ3CCs26RvOX
-# 6Nugggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQU2OH1qP/azKuEHQsTVJPtpvJl
+# LQSgggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
 # 9w0BAQsFADAwMQwwCgYDVQQGEwNMQUIxDTALBgNVBAoTBFpFUk8xETAPBgNVBAMT
 # CFplcm9EQzAxMB4XDTE3MDkyMDIxMDM1OFoXDTE5MDkyMDIxMTM1OFowPTETMBEG
 # CgmSJomT8ixkARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMT
@@ -3063,11 +3093,11 @@ if (Test-Path "$PSScriptRoot\VariableLibrary.ps1") {
 # ARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMTB1plcm9TQ0EC
 # E1gAAAH5oOvjAv3166MAAQAAAfkwCQYFKw4DAhoFAKB4MBgGCisGAQQBgjcCAQwx
 # CjAIoAKAAKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcCAQQwHAYKKwYBBAGC
-# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFJbJnJK6UlOwIayK
-# ZWxgtewnd8nkMA0GCSqGSIb3DQEBAQUABIIBABgikP8jx1ov6QREDCWSRjEVzE2A
-# HWuqkhR4nLKD/CtUxmC25d2cpBi7FLRGWH4Lnw6A44cV0tGrCJO3qIa+VmA5g5Zf
-# J7FSyJSz+89Trb6bopPRD1ChzwR/Ol0nfRgKvvvQMkYxdrUNpostpSr72BU40rgr
-# jqr2twlljUDgz7DFgADmzFbCuTWIB94/sNB9AVblbvDVCu8QE1Pp9lORxfwgrjc8
-# eNA0Gjb9F8q0RQZZFNIl7FuCkQuSkPvhnVcg8xbe4a6iwVt7cRFdzk2bY2XB3So2
-# Orh8PVp2L47wu8FmbApxKsuI7E+0GX3hB8CxWvpx8ATrvl+8+3+illPJoEQ=
+# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFIXLs34paLYUkYAU
+# s4/WPxPFDHFzMA0GCSqGSIb3DQEBAQUABIIBAGBQnUC52CFa4DoHSwKDH1F7HwSu
+# ZbZ2lOBRQ44JFJrBGsevYgECTSFs9DmFeNDNz9lbg53qJ2XZz/DsL1Wz+Zg2lgq+
+# ndN8oI7p2T20uQoQGBzKHcQoamCn2zPfDTtUst9+pip5k2LVuqmJGcr5dQSosE4n
+# 8If02oKlmZ5ayuX5SL9oHKpw46GLpActq6kjDYc9xT3gL7JlBOd0V7DdSuxJtp2c
+# eVzh5FjvylrW2a03UxxuczdjMTY18Oe/IY78iwrksKSpOHvLk7Q69cQawnnBvX6C
+# yI3ntHofqukZfv9+ZvnyPI3gItIobKaPOhyFGcNrdLNxKwuJO4nCkxdVV/g=
 # SIG # End signature block

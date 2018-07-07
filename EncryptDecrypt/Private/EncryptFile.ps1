@@ -35,7 +35,18 @@ Function EncryptFile {
 
     #Load dependencies
     try {
-        [System.Reflection.Assembly]::LoadWithPartialName('System.Security.Cryptography')
+        if ($PSVersionTable.PSEdition -eq "Core") {
+            $SystemCoreAssemblyPath = $($(Get-Command pwsh).Source | Split-Path -Parent) + '\System.Core.dll'
+            if (!$(Test-Path $SystemCoreAssemblyPath)) {
+                Write-Error "The path '$SystemCoreAssemblyPath' was not found! Halting!"
+                $global:FunctionResult = "1"
+                return
+            }
+            $null = Add-Type -Path $SystemCoreAssemblyPath
+        }
+        else {
+            [System.Reflection.Assembly]::LoadWithPartialName('System.Security.Cryptography')
+        }
     }
     catch {
         Write-Error 'Could not load required assembly.'
@@ -140,8 +151,8 @@ Function EncryptFile {
 # SIG # Begin signature block
 # MIIMiAYJKoZIhvcNAQcCoIIMeTCCDHUCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUSLi3rkeQPUN8mUYfbx8r84IJ
-# SLSgggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUcEZo0Mf0ZJHaqoaGaZ+oIAax
+# eoegggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
 # 9w0BAQsFADAwMQwwCgYDVQQGEwNMQUIxDTALBgNVBAoTBFpFUk8xETAPBgNVBAMT
 # CFplcm9EQzAxMB4XDTE3MDkyMDIxMDM1OFoXDTE5MDkyMDIxMTM1OFowPTETMBEG
 # CgmSJomT8ixkARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMT
@@ -198,11 +209,11 @@ Function EncryptFile {
 # ARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMTB1plcm9TQ0EC
 # E1gAAAH5oOvjAv3166MAAQAAAfkwCQYFKw4DAhoFAKB4MBgGCisGAQQBgjcCAQwx
 # CjAIoAKAAKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcCAQQwHAYKKwYBBAGC
-# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFPKGCl2rZRV4GIUu
-# oQ7LGrECFesaMA0GCSqGSIb3DQEBAQUABIIBAAgCV7mNihghrsQ/fwInb+cXeooo
-# /jpDlUJk9aXpPApW1RHJvpQ3XL/1FU3G29IKqlDxpn/pQsVMOrMppObBi22nzsqB
-# DBeWsbZPtrNOmYcBpD4K+i70MRtEXwYuXhee6rBvw5PYO3lhgsJyTn9vhLxA7e+T
-# 8/hcN8NlUbQxNNObXsPqcrsYcC5hBOqXDwWb3dBppWXSdScglXzqanGdONKcCHuc
-# qYGw+lgHw4/Gt2CtIDVXaJH4pvoZH02/PiEzcoDhbIZqGjeupZn3tjr+t27QCcbC
-# QD8mtyvuzUENIXaggDqR08rp3jFmIvNwG2fYVWKD4eWQ+5wIvHatlQiL1zw=
+# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFLljTs9WPxC6Vs8F
+# b5ZJ7GkX87coMA0GCSqGSIb3DQEBAQUABIIBAK9AxewX672zarVB93ORtQ9UlFN6
+# /wFkUtZOcxz4klVAdSXZH/UIKpyYKr8feg7hDZOIkZK2doMhL1Riram+WWVOPLl/
+# 7g2OMdvIhECOD1b1aeU8ITSUvAPMV1XOgUdUIvnJfmDci1xXuc+XTFCuvv0bkm0L
+# rvFMoMaP2mg/F63lBMFwlqxLCUStPD9Hrwo1BWpfhSRcZjyKommJ9g9bdj4RjRhY
+# aSlF9UrKAPRE/QFSYtJ3D1DlI8kiQeYjwYw6Kaj6FK2+pdYnXeoW1wdahxBnkspq
+# NMbhmBOw0VP78hPOKg3hicaTWQ1CqXj27DXWdOH713KoBtWwHIVYj/Dsnbg=
 # SIG # End signature block

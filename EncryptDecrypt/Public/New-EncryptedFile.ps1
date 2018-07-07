@@ -667,7 +667,8 @@ function New-EncryptedFile {
 
 
         # Determine if the contents of the File is too long for Asymetric RSA Encryption with pub cert and priv key
-        $EncodedBytes1 = Get-Content $ContentToEncrypt -Encoding Byte -ReadCount 0
+        #$EncodedBytes1 = Get-Content $ContentToEncrypt -Encoding Byte -ReadCount 0
+        $EncodedBytes1 = [System.IO.File]::ReadAllBytes($ContentToEncrypt)
 
         # If the file content is small enough, encrypt via RSA
         if ($EncodedBytes1.Length -lt $MaxNumberOfBytesThatCanBeEncryptedViaRSA) {
@@ -699,7 +700,8 @@ function New-EncryptedFile {
 
             # Encrypt the AESKey File using RSA asymetric encryption
             # NOTE: When Get-Content's -ReadCount is 0, all content is read in one fell swoop, so it's not an array of lines
-            $EncodedBytes1 = Get-Content "$AESKeyDir\$AESKeyFileNameSansExt.aeskey" -Encoding Byte -ReadCount 0
+            #$EncodedBytes1 = Get-Content "$AESKeyDir\$AESKeyFileNameSansExt.aeskey" -Encoding Byte -ReadCount 0
+            $EncodedBytes1 = [System.IO.File]::ReadAllBytes("$AESKeyDir\$AESKeyFileNameSansExt.aeskey")
             #$EncryptedBytes1 = $Cert1.PublicKey.Key.Encrypt($EncodedBytes1, $true)
             try {
                 $EncryptedBytes1 = $Cert1.PublicKey.Key.Encrypt($EncodedBytes1, [System.Security.Cryptography.RSAEncryptionPadding]::OaepSHA256)
@@ -758,7 +760,8 @@ function New-EncryptedFile {
         [array]$FilesToEncryptViaAES = @()
         foreach ($file in $FilesToEncryptPrep) {
             # Determine if the contents of the File is too long for Asymetric RSA Encryption with pub cert and priv key
-            $EncodedBytes1 = Get-Content $file -Encoding Byte -ReadCount 0
+            #$EncodedBytes1 = Get-Content $file -Encoding Byte -ReadCount 0
+            $EncodedBytes1 = [System.IO.File]::ReadAllBytes($file)
 
             # If the file content is small enough, encrypt via RSA
             if ($EncodedBytes1.Length -lt $MaxNumberOfBytesThatCanBeEncryptedViaRSA) {
@@ -775,7 +778,8 @@ function New-EncryptedFile {
 
         # Start Doing the Encryption
         foreach ($file in $FilesToEncryptViaRSA) {
-            $EncodedBytes1 = Get-Content $file -Encoding Byte -ReadCount 0
+            #$EncodedBytes1 = Get-Content $file -Encoding Byte -ReadCount 0
+            $EncodedBytes1 = [System.IO.File]::ReadAllBytes($file)
             #$EncryptedBytes1 = $Cert1.PublicKey.Key.Encrypt($EncodedBytes1, $true)
             try {
                 $EncryptedBytes1 = $Cert1.PublicKey.Key.Encrypt($EncodedBytes1, [System.Security.Cryptography.RSAEncryptionPadding]::OaepSHA256)
@@ -799,7 +803,8 @@ function New-EncryptedFile {
 
         # Encrypt the AESKey File using RSA asymetric encryption
         # NOTE: When Get-Content's -ReadCount is 0, all content is read in one fell swoop, so it's not an array of lines
-        $EncodedBytes1 = Get-Content "$AESKeyDir\$AESKeyFileName" -Encoding Byte -ReadCount 0
+        #$EncodedBytes1 = Get-Content "$AESKeyDir\$AESKeyFileName" -Encoding Byte -ReadCount 0
+        $EncodedBytes1 = [System.IO.File]::ReadAllBytes("$AESKeyDir\$AESKeyFileName")
         #$EncryptedBytes1 = $Cert1.PublicKey.Key.Encrypt($EncodedBytes1, $true)
         try {
             $EncryptedBytes1 = $Cert1.PublicKey.Key.Encrypt($EncodedBytes1, [System.Security.Cryptography.RSAEncryptionPadding]::OaepSHA256)
@@ -856,8 +861,8 @@ function New-EncryptedFile {
 # SIG # Begin signature block
 # MIIMiAYJKoZIhvcNAQcCoIIMeTCCDHUCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQU1WJQ1D1E/QRr8dfxM7GowbRY
-# 1yugggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUWsZ52J6j+ujEY1h/M9DeqCgB
+# afmgggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
 # 9w0BAQsFADAwMQwwCgYDVQQGEwNMQUIxDTALBgNVBAoTBFpFUk8xETAPBgNVBAMT
 # CFplcm9EQzAxMB4XDTE3MDkyMDIxMDM1OFoXDTE5MDkyMDIxMTM1OFowPTETMBEG
 # CgmSJomT8ixkARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMT
@@ -914,11 +919,11 @@ function New-EncryptedFile {
 # ARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMTB1plcm9TQ0EC
 # E1gAAAH5oOvjAv3166MAAQAAAfkwCQYFKw4DAhoFAKB4MBgGCisGAQQBgjcCAQwx
 # CjAIoAKAAKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcCAQQwHAYKKwYBBAGC
-# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFChGcm8e/OMH4ZjD
-# KlMkWPxvcNrqMA0GCSqGSIb3DQEBAQUABIIBAJIOlxDUM0++TR/MSX6zwFS4riSp
-# CsAFcy+1kLuVJg3tDyXsxxjShSbF+K11gn9CUTaCRtFWlsBEQZvKwZzs8J4MGqEq
-# nFtvCKLjGjH5TSDog1KNUM2zziO7/PHHIr9Vjr3k7hKL8ekxnf1vUxx6taB3MSNx
-# vwBTHMRTvdyaB9CfVL2oZsN3e6zZmN3ElsRD4qdBdYPvB21n2+QN7Ir6CpojSNA3
-# HKj8wzMLFeREXfWnXKbzxxmOHWTLdYI2YabSCIbz9x1Y0KKFCkFQM8TxDstPoAvy
-# MgWivDeBoayFADxBRKjI+qTdYho+hYHmffB9vktZjbg4kMjNvUvNAsFk7Ow=
+# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFDeqiQMjxtnOUD2Y
+# FkhcNxaja+zIMA0GCSqGSIb3DQEBAQUABIIBADEDHZ6FwvRA1OfY46jhrWcqy8y/
+# DXmtIRJxyX1LEHhAkSVkn/S8urFJLAfDLyeUdZnMU+FLIPqsV/2L42Y4VuC2gtBV
+# DF7hENLcuHBYCCL/2D/TZ8/DTqrxJ7c0VMtTMo7UNQdziJSRnQbMw7cuAfgBO8EA
+# 04Zgg+qIjBy1ceOVr444RjE9r0Ozc2nz8O2NY+6+uUp+4hVv1M7aEi/6yYwLxwfo
+# nzQIjYiNjVHrOkwmttw5bqI8icE3em43inZ9UAzI/YJsn4C5Ni8MR7w2KqEnM2sk
+# IOFuYR4LwvlQ/sETC+8JZsyYedM9vk53bD/6bP/XIppckEJaNPvstexXgFg=
 # SIG # End signature block

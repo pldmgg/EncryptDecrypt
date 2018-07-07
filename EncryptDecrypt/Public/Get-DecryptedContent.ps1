@@ -550,17 +550,41 @@ function Get-DecryptedContent {
                 $EncryptedBase64String = Get-Content $AESKeyLocation
                 $EncryptedBytes2 = [System.Convert]::FromBase64String($EncryptedBase64String)
                 #$EncryptedBytes2 = [System.IO.File]::ReadAllBytes($AESKeyLocation)
-                if ($PrivateKeyInfo) {
-                    #$DecryptedBytes2 = $PrivateKeyInfo.Decrypt($EncryptedBytes2, $true)
-                    $DecryptedBytes2 = $PrivateKeyInfo.Decrypt($EncryptedBytes2, [System.Security.Cryptography.RSAEncryptionPadding]::OaepSHA256)
+                try {
+                    if ($PrivateKeyInfo) {
+                        #$DecryptedBytes2 = $PrivateKeyInfo.Decrypt($EncryptedBytes2, $true)
+                        $DecryptedBytes2 = $PrivateKeyInfo.Decrypt($EncryptedBytes2, [System.Security.Cryptography.RSAEncryptionPadding]::OaepSHA256)
+                    }
+                    else {
+                        #$DecryptedBytes2 = $Cert1.PrivateKey.Decrypt($EncryptedBytes2, $true)
+                        $DecryptedBytes2 = $Cert1.PrivateKey.Decrypt($EncryptedBytes2, [System.Security.Cryptography.RSAEncryptionPadding]::OaepSHA256)
+                    }
+                }
+                catch {
+                    try {
+                        if ($PrivateKeyInfo) {
+                            #$DecryptedBytes2 = $PrivateKeyInfo.Decrypt($EncryptedBytes2, $true)
+                            $DecryptedBytes2 = $PrivateKeyInfo.Decrypt($EncryptedBytes2, [System.Security.Cryptography.RSAEncryptionPadding]::Pkcs1)
+                        }
+                        else {
+                            #$DecryptedBytes2 = $Cert1.PrivateKey.Decrypt($EncryptedBytes2, $true)
+                            $DecryptedBytes2 = $Cert1.PrivateKey.Decrypt($EncryptedBytes2, [System.Security.Cryptography.RSAEncryptionPadding]::Pkcs1)
+                        }
+                    }
+                    catch {
+                        Write-Error "Problem decrypting the file that contains the AES Key (i.e. '$AESKeyLocation')! Halting!"
+                        $global:FunctionResult = "1"
+                        return
+                    }
+                }
+                
+                if ($PSVersionTable.PSEdition -eq "Core") {
+                    $DecryptedContent2 = [system.text.encoding]::UTF8.GetString($DecryptedBytes2)
                 }
                 else {
-                    #$DecryptedBytes2 = $Cert1.PrivateKey.Decrypt($EncryptedBytes2, $true)
-                    $DecryptedBytes2 = $Cert1.PrivateKey.Decrypt($EncryptedBytes2, [System.Security.Cryptography.RSAEncryptionPadding]::OaepSHA256)
+                    $DecryptedContent2 = [system.text.encoding]::Unicode.GetString($DecryptedBytes2)
                 }
-                #$AESKey = [System.Convert]::ToBase64String($DecryptedBytes2)
-                $DecryptedContent2 = [system.text.encoding]::Unicode.GetString($DecryptedBytes2)
-                #$DecryptedContent2 = [system.text.encoding]::UTF8.GetString($DecryptedBytes2)
+
                 # Need to write $DecryptedContent2 to tempfile to strip BOM if present
                 $tmpFile = [IO.Path]::GetTempFileName()
                 [System.IO.File]::WriteAllLines($tmpFile, $DecryptedContent2.Trim())
@@ -923,8 +947,8 @@ function Get-DecryptedContent {
 # SIG # Begin signature block
 # MIIMiAYJKoZIhvcNAQcCoIIMeTCCDHUCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQU4XZBHkyLV68lI7S0IMJBPz6a
-# 4kagggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQU1ABoNdJd/gCmbaSXear0v5Fh
+# zf2gggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
 # 9w0BAQsFADAwMQwwCgYDVQQGEwNMQUIxDTALBgNVBAoTBFpFUk8xETAPBgNVBAMT
 # CFplcm9EQzAxMB4XDTE3MDkyMDIxMDM1OFoXDTE5MDkyMDIxMTM1OFowPTETMBEG
 # CgmSJomT8ixkARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMT
@@ -981,11 +1005,11 @@ function Get-DecryptedContent {
 # ARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMTB1plcm9TQ0EC
 # E1gAAAH5oOvjAv3166MAAQAAAfkwCQYFKw4DAhoFAKB4MBgGCisGAQQBgjcCAQwx
 # CjAIoAKAAKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcCAQQwHAYKKwYBBAGC
-# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFCuiO+Pxxk6ktOoW
-# 4//xq+QYyOPvMA0GCSqGSIb3DQEBAQUABIIBABOYirljht5FghiOqD/mgGbCpXdO
-# yoSv9PtTkqAyeRZyHPHS77gb4ap8ybwedcMUtDy8CZkm96BaXtYfrVOoH6kwxbDM
-# D9EwOYVeG35NfUSv5uC9+GJ0LE3rDZGilG6IXhSJufUArMXnicIZjkjvyaCo97+B
-# OZg5AVfH21EcEqi8hpvZ6jDLzmRpt5zy6UUlagJvvf/tHCM4nu2Fp4us8/7UPyIS
-# Yvf3UopJn2C5FXu2gW32V4gbsM5bB86xyO4F+frGMznal87bCFYcgyt+GTns/ki1
-# 4HvUoTmjnL9rfN/IB2nECTQ9poNU4zyaGhgwpUGKIttZDIF7l4hSfM66Y18=
+# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFKsk231LpPCcbYOg
+# 318RQeX7HG61MA0GCSqGSIb3DQEBAQUABIIBADqal4dELOfqR/twITHYYCAVtGZF
+# eK+jOxl9iRiWHwKRDSXzdvlrO2EVXmAiXoArWcKj8vfGO0X9ZmldEKEm8cfQSkgQ
+# +97By0S6Y9Ac6DCU1xj0PGodySYs5PSYsxEyuRW2m7rmmbdyJdBNOk0rjqSxPrfV
+# kfHSPysZs2gYGEjFR0BETsNX+MtZhX0FmirlEnofPIL2rsc2CdAzDyPuKGu57ZiA
+# fhqliZO6Am/yBx4Xnb/6ARj87gYke/3lMF4PQSFmnEliMHiP5/KaTobkCBvTzqaw
+# 1Qb32iyL2dhFG34UqekSjzbsQMzAMyUUPB9gUbrIq0EjtXwjCF9TDBv/8oI=
 # SIG # End signature block
