@@ -81,7 +81,7 @@ foreach ($import in $Private) {
     }
 }
 
-[System.Collections.Arraylist]$ModulesToInstallAndImport = @("Hyper-V")
+[System.Collections.Arraylist]$ModulesToInstallAndImport = @()
 if (Test-Path "$PSScriptRoot\module.requirements.psd1") {
     $ModuleManifestData = Import-PowerShellDataFile "$PSScriptRoot\module.requirements.psd1"
     $ModuleManifestData.Keys | Where-Object {$_ -ne "PSDependOptions"} | foreach {$null = $ModulesToinstallAndImport.Add($_)}
@@ -143,46 +143,14 @@ if ($LoadModuleDependenciesResult.UnacceptableUnloadedModules.Count -gt 0) {
 
     Add-Content -Value $FunctionTextToAdd -Path "$env:BHModulePath\$env:BHProjectName.psm1"
 
-    # Finally, add array $FunctionsForSBuse in case we want to use this Module Remotely
-    $FunctionsForSBUseString = @'
-[System.Collections.ArrayList]$FunctionsForSBUse = @(
-    ${Function:FixNTVirtualMachinesPerms}.Ast.Extent.Text 
-    ${Function:GetDomainController}.Ast.Extent.Text
-    ${Function:GetElevation}.Ast.Extent.Text
-    ${Function:GetFileLockProcess}.Ast.Extent.Text
-    ${Function:GetModMapObject}.Ast.Extent.Text
-    ${Function:GetModuleDependencies}.Ast.Extent.Text
-    ${Function:GetNativePath}.Ast.Extent.Text
-    ${Function:GetVSwitchAllRelatedInfo}.Ast.Extent.Text
-    ${Function:GetWinPSInCore}.Ast.Extent.Text
-    ${Function:InstallFeatureDism}.Ast.Extent.Text
-    ${Function:InstallHyperVFeatures}.Ast.Extent.Text
-    ${Function:InvokeModuleDependencies}.Ast.Extent.Text
-    ${Function:InvokePSCompatibility}.Ast.Extent.Text
-    ${Function:NewUniqueString}.Ast.Extent.Text
-    ${Function:PauseForWarning}.Ast.Extent.Text
-    ${Function:ResolveHost}.Ast.Extent.Text
-    ${Function:TestIsValidIPAddress}.Ast.Extent.Text
-    ${Function:UnzipFile}.Ast.Extent.Text
-    ${Function:Create-Domain}.Ast.Extent.Text
-    ${Function:Create-RootCA}.Ast.Extent.Text
-    ${Function:Create-SubordinateCA}.Ast.Extent.Text
-    ${Function:Create-TwoTierPKI}.Ast.Extent.Text
-    ${Function:Create-TwoTierPKICFSSL}.Ast.Extent.Text
-    ${Function:Deploy-HyperVVagrantBoxManually}.Ast.Extent.Text
-    ${Function:Generate-Certificate}.Ast.Extent.Text
-    ${Function:Get-DSCEncryptionCert}.Ast.Extent.Text
-    ${Function:Get-VagrantBoxManualDownload}.Ast.Extent.Text
-    ${Function:Manage-HyperVVM}.Ast.Extent.Text
-    ${Function:New-DomainController}.Ast.Extent.Text
-    ${Function:New-RootCA}.Ast.Extent.Text
-    ${Function:New-Runspace}.Ast.Extent.Text
-    ${Function:New-SelfSignedCertificateEx}.Ast.Extent.Text
-    ${Function:New-SubordinateCA}.Ast.Extent.Text
-)
+    # Finally, add array the variables contained in VariableLibrary.ps1 if it exists in case we want to use this Module Remotely
+    $AddVariableLibrary = @'
+if (Test-Path "$PSScriptRoot\VariableLibrary.ps1") {
+    . "$PSScriptRoot\VariableLibrary.ps1"
+}
 '@
 
-    Add-Content -Value $FunctionsForSBUseString -Path "$env:BHModulePath\$env:BHProjectName.psm1"
+    Add-Content -Value $AddVariableLibrary -Path "$env:BHModulePath\$env:BHProjectName.psm1"
 
     if ($Cert) {
         # At this point the .psm1 is finalized, so let's sign it

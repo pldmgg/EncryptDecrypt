@@ -54,91 +54,32 @@ Describe -Name "General Project Validation: $env:BHProjectName" -Tag 'Validation
         $Module = Get-Module $env:BHProjectName
         $Module.Name -eq $env:BHProjectName | Should Be $True
         $Commands = $Module.ExportedCommands.Keys
-        $Commands -contains 'ConfirmAWSVM' | Should Be $False
-        $Commands -contains 'ConfirmAzureVM' | Should Be $False
-        $Commands -contains 'ConfirmGoogleComputeVM' | Should Be $False
-        $Commands -contains 'ConvertSize' | Should Be $False
-        $Commands -contains 'DoDockerinstall' | Should Be $False
-        $Commands -contains 'EnableNestedVM' | Should Be $False
-        $Commands -contains 'FixNTVirtualMachinesPerms' | Should Be $False
-        $Commands -contains 'GetDomainController' | Should Be $False
-        $Commands -contains 'GetElevation' | Should Be $False
-        $Commands -contains 'GetFileLockProcess' | Should Be $False
-        $Commands -contains 'GetIPRange' | Should Be $False
-        $Commands -contains 'GetModMapObject' | Should Be $False
+        $Commands -contains 'CreateAESKey' | Should Be $False
+        $Commands -contains 'DecryptFile' | Should Be $False
+        $Commands -contains 'EncryptFile' | Should Be $False
         $Commands -contains 'GetModuleDependencies' | Should Be $False
-        $Commands -contains 'GetNativePath' | Should Be $False
-        $Commands -contains 'GetNestedVirtCapabilities' | Should Be $False
-        $Commands -contains 'GetVSwitchAllRelatedInfo' | Should Be $False
-        $Commands -contains 'GetWinPSInCore' | Should Be $False
-        $Commands -contains 'GetWorkingCredentials' | Should Be $False
-        $Commands -contains 'InstallFeatureDism' | Should Be $False
-        $Commands -contains 'InstallHyperVFeatures' | Should Be $False
         $Commands -contains 'InvokeModuleDependencies' | Should Be $False
         $Commands -contains 'InvokePSCompatibility' | Should Be $False
-        $Commands -contains 'ManualPSGalleryModuleInstall' | Should Be $False
-        $Commands -contains 'MobyLinuxBetter' | Should Be $False
-        $Commands -contains 'NewUniqueString' | Should Be $False
-        $Commands -contains 'PauseForWarning' | Should Be $False
-        $Commands -contains 'ResolveHost' | Should Be $False
-        $Commands -contains 'TestIsValidIPAddress' | Should Be $False
+        $Commands -contains 'ConvertSize' | Should Be $False
         $Commands -contains 'UnzipFile' | Should Be $False
         
-        $Commands -contains 'Add-WinRMTrustedHost' | Should Be $True
-        $Commands -contains 'Create-Domain' | Should Be $True
-        $Commands -contains 'Create-RootCA' | Should Be $True
-        $Commands -contains 'Create-SubordinateCA' | Should Be $True
-        $Commands -contains 'Create-TwoTierPKI' | Should Be $True
-        $Commands -contains 'Create-TwoTierPKICFSSL' | Should Be $True
-        $Commands -contains 'Deploy-HyperVVagrantBoxManually' | Should Be $True
-        $Commands -contains 'Generate-Certificate' | Should Be $True
-        $Commands -contains 'Get-DockerInfo' | Should Be $True
-        $Commands -contains 'Get-DSCEncryptionCert' | Should Be $True
+        $Commands -contains 'Decrypt-EncryptedFile' | Should Be $True
+        $Commands -contains 'Extract-PfxCerts' | Should Be $True
         $Commands -contains 'Get-EncryptionCert' | Should Be $True
-        $Commands -contains 'Get-VagrantBoxManualDownload' | Should Be $True
-        $Commands -contains 'Install-Docker' | Should Be $True
-        $Commands -contains 'Join-LinuxToAD' | Should Be $True
-        $Commands -contains 'Manage-HyperVVM' | Should Be $True
-        $Commands -contains 'Move-DockerStorage' | Should Be $True
-        $Commands -contains 'New-DomainController' | Should Be $True
-        $Commands -contains 'New-RootCA' | Should Be $True
-        $Commands -contains 'New-Runspace' | Should Be $True
+        $Commands -contains 'Get-PfxCertificateBetter' | Should Be $True
+        $Commands -contains 'Get-PrivateKeyProperty' | Should Be $True
+        $Commands -contains 'New-EncryptedFile' | Should Be $True
         $Commands -contains 'New-SelfSignedCertificateEx' | Should Be $True
-        $Commands -contains 'New-SubordinateCA' | Should Be $True
-        $Commands -contains 'Recreate-MobyLinuxVM' | Should Be $True
-        $Commands -contains 'Switch-DockerContainerType' | Should Be $True
     }
 
     It "Module '$env:BHProjectName' Private Functions Are Available in Internal Scope" {
         $Module = Get-Module $env:BHProjectName
-        [bool]$Module.Invoke({Get-Item function:ConfirmAWSVM}) | Should Be $True
-        [bool]$Module.Invoke({Get-Item function:ConfirmAzureVM}) | Should Be $True
-        [bool]$Module.Invoke({Get-Item function:ConfirmGoogleComputeVM}) | Should Be $True
-        [bool]$Module.Invoke({Get-Item function:ConvertSize}) | Should Be $True
-        [bool]$Module.Invoke({Get-Item function:DoDockerInstall}) | Should Be $True
-        [bool]$Module.Invoke({Get-Item function:EnableNestedVM}) | Should Be $True
-        [bool]$Module.Invoke({Get-Item function:FixNTVirtualMachinesPerms}) | Should Be $True
-        [bool]$Module.Invoke({Get-Item function:GetDomainController}) | Should Be $True
-        [bool]$Module.Invoke({Get-Item function:GetElevation}) | Should Be $True
-        [bool]$Module.Invoke({Get-Item function:GetFileLockProcess}) | Should Be $True
-        [bool]$Module.Invoke({Get-Item function:GetIPRange}) | Should Be $True
-        [bool]$Module.Invoke({Get-Item function:GetModMapObject}) | Should Be $True
+        [bool]$Module.Invoke({Get-Item function:CreateAESKey}) | Should Be $True
+        [bool]$Module.Invoke({Get-Item function:DecryptFile}) | Should Be $True
+        [bool]$Module.Invoke({Get-Item function:EncryptFile}) | Should Be $True
         [bool]$Module.Invoke({Get-Item function:GetModuleDependencies}) | Should Be $True
-        [bool]$Module.Invoke({Get-Item function:GetNativePath}) | Should Be $True
-        [bool]$Module.Invoke({Get-Item function:GetNestedVirtCapabilities}) | Should Be $True
-        [bool]$Module.Invoke({Get-Item function:GetVSwitchAllRelatedInfo}) | Should Be $True
-        [bool]$Module.Invoke({Get-Item function:GetWinPSInCore}) | Should Be $True
-        [bool]$Module.Invoke({Get-Item function:GetWorkingCredentials}) | Should Be $True
-        [bool]$Module.Invoke({Get-Item function:InstallFeatureDism}) | Should Be $True
-        [bool]$Module.Invoke({Get-Item function:InstallHyperVFeatures}) | Should Be $True
         [bool]$Module.Invoke({Get-Item function:InvokeModuleDependencies}) | Should Be $True
         [bool]$Module.Invoke({Get-Item function:InvokePSCompatibility}) | Should Be $True
-        [bool]$Module.Invoke({Get-Item function:ManualPSGalleryModuleInstall}) | Should Be $True
-        [bool]$Module.Invoke({Get-Item function:MobyLinuxBetter}) | Should Be $True
-        [bool]$Module.Invoke({Get-Item function:NewUniqueString}) | Should Be $True
-        [bool]$Module.Invoke({Get-Item function:PauseForWarning}) | Should Be $True
-        [bool]$Module.Invoke({Get-Item function:ResolveHost}) | Should Be $True
-        [bool]$Module.Invoke({Get-Item function:TestIsValidIPAddress}) | Should Be $True
         [bool]$Module.Invoke({Get-Item function:UnzipFile}) | Should Be $True
     }
 }

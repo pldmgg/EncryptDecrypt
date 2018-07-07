@@ -9,16 +9,16 @@
 @{
 
 # Script module or binary module file associated with this manifest.
-RootModule = 'MiniLab.psm1'
+RootModule = 'EncryptDecrypt.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.9.3'
+ModuleVersion = '0.8.0'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
 
 # ID used to uniquely identify this module
-GUID = 'e5e84be6-c8ec-4f1b-8136-d916d50d3d15'
+GUID = '83435dfe-0ce5-4e7f-8b56-b129a739ffe3'
 
 # Author of this module
 Author = 'pldmgg'
@@ -30,7 +30,7 @@ CompanyName = 'Boop'
 Copyright = '(c) 2018 pldmgg. All rights reserved.'
 
 # Description of the functionality provided by this module
-Description = 'Setup a very basic Windows Lab Environment from scratch, or add specific infrastructure components to your existing Domain. Leverages Vagrant Boxes to make deployment faster/easier.'
+Description = 'Create AES/RSA encrypted strings or files. Decrypt existing AES/RSA encrypted strings or files.'
 
 # Minimum version of the Windows PowerShell engine required by this module
 PowerShellVersion = '5.1'
@@ -69,13 +69,9 @@ PowerShellVersion = '5.1'
 # NestedModules = @()
 
 # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-FunctionsToExport = 'Add-WinRMTrustedHost','Create-Domain','Create-RootCA','Create-SubordinateCA',
-                    'Create-TwoTierPKI','Create-TwoTierPKICFSSL','Deploy-HyperVVagrantBoxManually',
-                    'Generate-Certificate','Get-DockerInfo','Get-DSCEncryptionCert',
-                    'Get-EncryptionCert','Get-VagrantBoxManualDownload','Install-Docker',
-                    'Join-LinuxToAD','New-Runspace','Manage-HyperVVM','Move-DockerStorage',
-                    'New-DomainController','New-RootCA','New-SelfSignedCertificateEx',
-                    'New-SubordinateCA','Recreate-MobyLinuxVM','Switch-DockerContainerType'
+FunctionsToExport = 'Decrypt-EncryptedFile','Extract-PfxCerts','Get-EncryptionCert',
+                    'Get-PfxCertificateBetter','Get-PrivateKeyProperty',
+                    'New-EncryptedFile','New-SelfSignedCertificateEx'
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
 CmdletsToExport = '*'
@@ -93,7 +89,7 @@ AliasesToExport = '*'
 # ModuleList = @()
 
 # List of all files packaged with this module
-FileList = 'MiniLab.psm1', 'MiniLab.psd1'
+FileList = 'EncryptDecrypt.psm1', 'EncryptDecrypt.psd1'
 
 # Private data to pass to the module specified in RootModule/ModuleToProcess. This may also contain a PSData hashtable with additional module metadata used by PowerShell.
 PrivateData = @{
@@ -120,7 +116,7 @@ PrivateData = @{
 } # End of PrivateData hashtable
 
 # HelpInfo URI of this module
-HelpInfoURI = 'http://pldmgg.github.io/misc-powershell'
+HelpInfoURI = 'http://pldmgg.github.io'
 
 # Default prefix for commands exported from this module. Override the default prefix using Import-Module -Prefix.
 # DefaultCommandPrefix = ''
