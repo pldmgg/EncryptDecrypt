@@ -54,16 +54,17 @@ Describe -Name "General Project Validation: $env:BHProjectName" -Tag 'Validation
         $Module = Get-Module $env:BHProjectName
         $Module.Name -eq $env:BHProjectName | Should Be $True
         $Commands = $Module.ExportedCommands.Keys
-        $Commands -contains 'CreateAESKey' | Should Be $False
+        $Commands -contains 'NewCryptographyKey' | Should Be $False
         $Commands -contains 'DecryptFile' | Should Be $False
         $Commands -contains 'EncryptFile' | Should Be $False
         $Commands -contains 'GetModuleDependencies' | Should Be $False
         $Commands -contains 'InvokeModuleDependencies' | Should Be $False
         $Commands -contains 'InvokePSCompatibility' | Should Be $False
         $Commands -contains 'ConvertSize' | Should Be $False
+        $Commands -contains 'NewUniqueString' | Should Be $False
         $Commands -contains 'UnzipFile' | Should Be $False
         
-        $Commands -contains 'Decrypt-EncryptedFile' | Should Be $True
+        $Commands -contains 'Get-DecryptedContent' | Should Be $True
         $Commands -contains 'Extract-PfxCerts' | Should Be $True
         $Commands -contains 'Get-EncryptionCert' | Should Be $True
         $Commands -contains 'Get-PfxCertificateBetter' | Should Be $True
@@ -74,12 +75,13 @@ Describe -Name "General Project Validation: $env:BHProjectName" -Tag 'Validation
 
     It "Module '$env:BHProjectName' Private Functions Are Available in Internal Scope" {
         $Module = Get-Module $env:BHProjectName
-        [bool]$Module.Invoke({Get-Item function:CreateAESKey}) | Should Be $True
+        [bool]$Module.Invoke({Get-Item function:NewCryptographyKey}) | Should Be $True
         [bool]$Module.Invoke({Get-Item function:DecryptFile}) | Should Be $True
         [bool]$Module.Invoke({Get-Item function:EncryptFile}) | Should Be $True
         [bool]$Module.Invoke({Get-Item function:GetModuleDependencies}) | Should Be $True
         [bool]$Module.Invoke({Get-Item function:InvokeModuleDependencies}) | Should Be $True
         [bool]$Module.Invoke({Get-Item function:InvokePSCompatibility}) | Should Be $True
+        [bool]$Module.Invoke({Get-Item function:NewUniqueString}) | Should Be $True
         [bool]$Module.Invoke({Get-Item function:UnzipFile}) | Should Be $True
     }
 }
@@ -87,8 +89,8 @@ Describe -Name "General Project Validation: $env:BHProjectName" -Tag 'Validation
 # SIG # Begin signature block
 # MIIMiAYJKoZIhvcNAQcCoIIMeTCCDHUCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUnugjtfreSYiojvpBR3RcziO1
-# xFygggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUWMVE3WCYs1W8ZjnQ65/iYJ8i
+# 78egggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
 # 9w0BAQsFADAwMQwwCgYDVQQGEwNMQUIxDTALBgNVBAoTBFpFUk8xETAPBgNVBAMT
 # CFplcm9EQzAxMB4XDTE3MDkyMDIxMDM1OFoXDTE5MDkyMDIxMTM1OFowPTETMBEG
 # CgmSJomT8ixkARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMT
@@ -145,11 +147,11 @@ Describe -Name "General Project Validation: $env:BHProjectName" -Tag 'Validation
 # ARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMTB1plcm9TQ0EC
 # E1gAAAH5oOvjAv3166MAAQAAAfkwCQYFKw4DAhoFAKB4MBgGCisGAQQBgjcCAQwx
 # CjAIoAKAAKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcCAQQwHAYKKwYBBAGC
-# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFFf+tZjoSGzoemwH
-# 8R1Z9C05YC20MA0GCSqGSIb3DQEBAQUABIIBAGh+fxQcFWb4M/wgWwonp6lwyZyz
-# LRxPqs6GT30Zg/g1UbuFPSDYwrnmBp6EeoiZKvSEy8K0r/B/h/ta84D140GJdkoq
-# LvR6wq7TQQ3ZVXUaH+6H0XxG6V9qKnV1P58856sA7lsq9jCDxL+vU7KmDLv930MI
-# pbGxZj7EObxIGVMq9VSF//3fvboN2Q48CJS2PRqN7TZ9571CmT8a5J22HlOsUnfN
-# qFTXrkqAxHxQC/Hcbuq+Ni5LHVwmSi2spGOm3U6e2fShX7gEcFrZ4LrAjFWzYocU
-# dLqbSHwCOln/11JBuKAYZYcrQnwbApo7uE7vqw088lqZn9mGdHSLg0IpzrM=
+# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFEfrM71lYcY0IAni
+# tFY8r2eu8LqjMA0GCSqGSIb3DQEBAQUABIIBABbwu4czXQ78hbk/ZMaSeU+vlFJ3
+# nhQBFa1cG83YKjnJlm1fOxkRpPSG3Nq5WjQGN8RzMiiS9Ujic/I9BFMnjB+gkhPu
+# cmhkaV9mT6vL1+aIpK++nBu1BVD5Li6/25y+l+lHWscxJNz8CUoDx4SQRIqaqHNY
+# nbRtlpAgJVulPSqgh49OJbKD+cBvde5NlyyS1R0l03p05oNsTJ203S//27FJVmRM
+# 62faVkvUDYqu1uVIVtQu4+3wMLwR/IS05DrMHO1eZ9xTVxF76kdWLiByrxcD8J3Y
+# vcQ3oa69QZjfagECJksNPf5dB/h64MtwclOOiZie02EamB8nWMcgHQsyM8E=
 # SIG # End signature block

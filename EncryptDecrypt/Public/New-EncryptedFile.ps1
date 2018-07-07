@@ -17,7 +17,7 @@
 
         You will ALWAYS need a private key from your Certificate's public/private pair in order to decrypt content
         encrypted via this function. You will be able to get this private key from the .pfx file that you provide
-        to the -PathToCertFile parameter, or from the Certificate in the Cert:\LocalMachine\My store that you provide
+        to the -PathToPfxFile parameter, or from the Certificate in the Cert:\LocalMachine\My store that you provide
         to the -CNofCertInStore parameter of this function.
 
         You will SOMETIMES need the AES Key to decrypt larger files that were encrypted using AES encryption.
@@ -29,7 +29,7 @@
         file outputs OR in Cert:\LocalMachine\My OR in BOTH locations. Note that the RSA-encrypted AES Key will be
         found in a file in the same directory as encrypted file outputs.
 
-    .PARAMETER ContentType
+    .PARAMETER SourceType
         Optional, but HIGHLY recommended.
 
         This parameter takes a string with one of the following values:
@@ -38,10 +38,10 @@
             File
             Directory
 
-        If -ContentToEncrypt is a string, -ContentType should be "String".
-        If -ContentToEncrypt is an array of strings, -ContentType should be "ArrayOfStrings".
-        If -ContentToEncrypt is a string that represents a full path to a file, -ContentType should be "File".
-        If -ContentToEncrypt is a string that represents a full path to a directory, -ContentType should be "Directory".
+        If -ContentToEncrypt is a string, -SourceType should be "String".
+        If -ContentToEncrypt is an array of strings, -SourceType should be "ArrayOfStrings".
+        If -ContentToEncrypt is a string that represents a full path to a file, -SourceType should be "File".
+        If -ContentToEncrypt is a string that represents a full path to a directory, -SourceType should be "Directory".
 
     .PARAMETER ContentToEncrypt
         Mandatory.
@@ -55,8 +55,8 @@
     .PARAMETER Recurse
         Optional.
 
-        This parameter is a switch. It should only be used if -ContentType is "Directory". The function will fail
-        immediately if this parameter is used and -ContentType is NOT "Directory".
+        This parameter is a switch. It should only be used if -SourceType is "Directory". The function will fail
+        immediately if this parameter is used and -SourceType is NOT "Directory".
 
         If this switch is NOT used, only files immediately under the directory specified by -ContentToEncrypt are
         encrypted.
@@ -68,10 +68,10 @@
         Optional.
 
         This parameter specifies a full path to a NEW file that will contain encrypted information. This parameter should
-        ONLY be used if -ContentType is "String" or "ArrayOfStrings". If this parameter is used and -ContentType is NOT
+        ONLY be used if -SourceType is "String" or "ArrayOfStrings". If this parameter is used and -SourceType is NOT
         "String" or "ArrayOfStrings", the function will immediately fail.
 
-    .PARAMETER PathToCertFile
+    .PARAMETER PathToPfxFile
         Optional.
 
         This parameter takes a string that represents the full path to a .pfx file. The public certificate in the
@@ -98,10 +98,10 @@
 
     .EXAMPLE
         # String Encryption Example
-        # NOTE: If neither -PathToCertFile nor -CNOfCertInStore parameters are used, a NEW Self-Signed Certificate is
+        # NOTE: If neither -PathToPfxFile nor -CNOfCertInStore parameters are used, a NEW Self-Signed Certificate is
         # created and added to Cert:\LocalMachine\My
 
-        PS C:\Users\zeroadmin> New-EncryptedFile -ContentType "String" -ContentToEncrypt "MyPLaInTeXTPwd321!" -FileToOutput $HOME\MyPwd.txt
+        PS C:\Users\zeroadmin> New-EncryptedFile -SourceType String -ContentToEncrypt "MyPLaInTeXTPwd321!" -FileToOutput $HOME\MyPwd.txt
 
         FileEncryptedViaRSA                : C:\Users\zeroadmin\MyPwd.txt.rsaencrypted
         FileEncryptedViaAES                :
@@ -124,7 +124,7 @@
                                             [Thumbprint]
                                             34F3526E85C04CEDC79F26C2B086E52CF75F91C3
 
-        LocationOfCertUsedForRSAEncryption : Cert:\LocalMachine\My
+        LocationOfCertUsedForRSAEncryption : Cert:\LocalMachine\My\34F3526E85C04CEDC79F26C2B086E52CF75F91C3
         UnprotectedAESKey                  :
         RSAEncryptedAESKey                 :
         RSAEncryptedAESKeyLocation         :
@@ -133,7 +133,7 @@
     .EXAMPLE
         # ArrayOfStrings Encryption Example
         PS C:\Users\zeroadmin> $foodarray = @("fruit","vegetables","meat")
-        PS C:\Users\zeroadmin> New-EncryptedFile -ContentType ArrayOfStrings -ContentToEncrypt $foodarray -PathToCertFile C:\Users\zeroadmin\other\ArrayOfStrings.pfx -FileToOutput $HOME\Food.txt
+        PS C:\Users\zeroadmin> New-EncryptedFile -SourceType ArrayOfStrings -ContentToEncrypt $foodarray -PathToPfxFile C:\Users\zeroadmin\other\ArrayOfStrings.pfx -FileToOutput $HOME\Food.txt
 
         FilesEncryptedViaRSA               : {C:\Users\zeroadmin\Food.txt0.rsaencrypted, C:\Users\zeroadmin\Food.txt1.rsaencrypted,
                                             C:\Users\zeroadmin\Food.txt2.rsaencrypted}
@@ -168,7 +168,7 @@
         # File Encryption Example
         PS C:\Users\zeroadmin> $ZeroTestPwd = Read-Host -Prompt "Enter password for ZeroTest Cert" -AsSecureString
         Enter password for ZeroTest Cert: ***********************
-        PS C:\Users\zeroadmin> New-EncryptedFile -ContentType File -ContentToEncrypt C:\Users\zeroadmin\tempdir\lorumipsum.txt -CNofCertInStore "ZeroTest" -CertPwd $ZeroTestPwd
+        PS C:\Users\zeroadmin> New-EncryptedFile -SourceType File -ContentToEncrypt C:\Users\zeroadmin\tempdir\lorumipsum.txt -CNofCertInStore "ZeroTest" -CertPwd $ZeroTestPwd
 
         FileEncryptedViaRSA                :
         FileEncryptedViaAES                : C:\Users\zeroadmin\tempdir\lorumipsum.txt.aesencrypted
@@ -189,9 +189,9 @@
                                             <redacted>
 
                                             [Thumbprint]
-                                            <redacted>
+                                            34F3526E85C04CEDC79F26C2B086E52CF75F91C3
 
-        LocationOfCertUsedForRSAEncryption : Cert:\LocalMachine\My
+        LocationOfCertUsedForRSAEncryption : Cert:\LocalMachine\My\34F3526E85C04CEDC79F26C2B086E52CF75F91C3
         UnprotectedAESKey                  : E0588dE3siWEOAyM7A5+6LKqC5tG1egxXTfsUUE5sNM=
         RSAEncryptedAESKey                 : NkKjOwd8T45u1Hpn0CL9m5zD/97PG9GNnJCShh0vOUTn+m+E2nLFxuW7ChKiHCVtP1vD2z+ckW3kk1va3PAfjw3/hfm9zi2qn4Xu7kPdWL1owDdQyvBuUPTc35
                                             FSqaIJxxdsqWLnUHo1PINY+2usIPT5tf57TbTKbAg5q/RXOzCeUS+QQ+nOKMgQGnadlUVyyIYo2JRdzzKaTSHRwK4QFdDk/PUy39ei2FVOIlwitiAkWTyjFAb6
@@ -202,10 +202,10 @@
 
     .EXAMPLE
         # Directory Encryption Example
-        # NOTE: If neither -PathToCertFile nor -CNOfCertInStore parameters are used, a NEW Self-Signed Certificate is
+        # NOTE: If neither -PathToPfxFile nor -CNOfCertInStore parameters are used, a NEW Self-Signed Certificate is
         # created and added to Cert:\LocalMachine\My
 
-        PS C:\Users\zeroadmin> New-EncryptedFile -ContentType Directory -ContentToEncrypt C:\Users\zeroadmin\tempdir
+        PS C:\Users\zeroadmin> New-EncryptedFile -SourceType Directory -ContentToEncrypt C:\Users\zeroadmin\tempdir
         Please enter the desired CN for the new Self-Signed Certificate: TempDirEncryption
 
 
@@ -232,7 +232,7 @@
                                             [Thumbprint]
                                             F2EFEBB37C37844A230961447C7C91C1DE13F1A5
 
-        LocationOfCertUsedForRSAEncryption : Cert:\LocalMachine\My
+        LocationOfCertUsedForRSAEncryption : Cert:\LocalMachine\My\F2EFEBB37C37844A230961447C7C91C1DE13F1A5
         UnprotectedAESKey                  : BKcLSwqZjSq/D1RuqBGBxZ0dng+B3JwrWJVlhqgxrmo=
         RSAEncryptedAESKey                 : sUshzhMfrbO5FgOGw1Nsx9g5hrnsdUHsJdx8SltK8UeNcCWq8Rsk6dxC12NjrxUSHTSrPYdn5UycBqXB+PNltMebAj80I3Zsh5xRsSbVRSS+fzgGJTUw7ya98J
                                             7vKISUaurBTK4C4Czh1D2bgT7LNADO7qAUgbnv+xdqxgIexlOeNsEkzG10Tl+DxkUVgcpJYbznoTXPUVnj9AZkcczRd2EWPcV/WZnTZwmtH+Ill7wbXSG3R95d
@@ -246,24 +246,25 @@
 function New-EncryptedFile {
     [CmdletBinding()]
     Param(
-        [Parameter(Mandatory=$False)]
+        [Parameter(Mandatory=$True)]
         [ValidateSet("String","ArrayOfStrings","File","Directory")]
-        $ContentType,
+        [string]$SourceType,
 
         [Parameter(Mandatory=$True)]
-        $ContentToEncrypt,
+        [string[]]$ContentToEncrypt,
 
         [Parameter(Mandatory=$False)]
         [switch]$Recurse,
 
         [Parameter(Mandatory=$False)]
-        $FileToOutput,
+        [string]$FileToOutput,
 
         [Parameter(Mandatory=$False)]
-        $PathToCertFile,
+        [ValidatePattern("\.pfx$")]
+        [string]$PathToPfxFile,
 
         [Parameter(Mandatory=$False)]
-        $CNofCertInStore,
+        [string]$CNofCertInStore,
 
         [Parameter(Mandatory=$False)]
         [securestring]$CertPwd
@@ -271,268 +272,212 @@ function New-EncryptedFile {
 
     ##### BEGIN Parameter Validation #####
 
-    if ($ContentToEncrypt.GetType().Fullname -eq "System.String" -and !$ContentType) {
-        $ContentType = "String"
-    }
-    if ($ContentToEncrypt.GetType().Fullname -match "System.String\[\]|System.Object\[\]" -and !$ContentType) {
-        $ContentType = "ArrayOfStrings"
-    }
-
-    if ($ContentType -match "String|ArrayOfStrings" -and !$FileToOutput) {
+    if ($SourceType -match "String|ArrayOfStrings" -and !$FileToOutput) {
         $FileToOutput = Read-Host -Prompt "Please enter the full path to the new Encrypted File you would like to generate."
     }
-    if ($ContentType -match "String|ArrayOfStrings" -and !$ContentToEncrypt) {
-        $ContentToEncrypt = Read-Host -Prompt "Please enter the string that you would like to encrypt and output to $FileToOutput"
+    if ($SourceType -eq "File" -or $SourceType -eq "Directory" -and $FileToOutput) {
+        $ErrMsg = "The -FileToOutput should NOT be used when -SourceType is 'File' or 'Directory'. " +
+        "Simply use '-SourceType File' or '-SourceType Directory' and output naming convention will be " +
+        "handled automatically by the New-EncryptedFile function. Halting!"
+        Write-Error $ErrMsg
+        $global:FunctionResult = "1"
+        return
+    }
+    if ($Recurse -and $SourceType -ne "Directory") {
+        Write-Verbose "The -Recurse switch should only be used when -SourceType is 'Directory'! Halting!"
+        Write-Error "The -Recurse switch should only be used when -SourceType is 'Directory'! Halting!"
+        $global:FunctionResult = "1"
+        return
     }
 
     $RegexDirectoryPath = '^(([a-zA-Z]:\\)|(\\\\))((?![.<>:"\/\\|?*]).)+((?![.<>:"\/|?*]).)+$'
     $RegexFilePath = '^(([a-zA-Z]:\\)|(\\\\))((?![.<>:"\/\\|?*]).)+((?![<>:"\/|?*]).)+((.*?\.)|(.*?\.[\w]+))+$'
-    if ($ContentType -eq "File" -and $ContentToEncrypt -notmatch $RegexFilePath) {
-        Write-Verbose "The -ContentType specified was `"File`" but $ContentToEncrypt does not appear to be a valid file path. This is either because a full path was not provided of the file does not have a file extenstion. Please correct and try again. Halting!"
-        Write-Error "The -ContentType specified was `"File`" but $ContentToEncrypt does not appear to be a valid file path. This is either because a full path was not provided of the file does not have a file extenstion. Please correct and try again. Halting!"
+    if ($SourceType -eq "File" -and $ContentToEncrypt -notmatch $RegexFilePath) {
+        $ErrMsg = "The -SourceType specified was 'File' but '$ContentToEncrypt' does not appear to " +
+        "be a valid file path. This is either because a full path was not provided or because the file does " +
+        "not have a file extenstion. Please correct and try again. Halting!"
+        Write-Error $ErrMsg
         $global:FunctionResult = "1"
         return
     }
-    if ($ContentType -eq "File" -and $FileToOutput) {
-        Write-Verbose "The -FileToOutput should NOT be used when -ContentType is `"File`". Simply use `"-ContentType File`" and output file naming convention will be handled automatically by the New-EncryptedFile function. Halting!"
-        Write-Error "The -FileToOutput should NOT be used when -ContentType is `"File`". Simply use `"-ContentType File`" and output file naming convention will be handled automatically by the New-EncryptedFile function. Halting!"
+    if ($SourceType -eq "Directory" -and $ContentToEncrypt -notmatch $RegexDirectoryPath) {
+        $ErrMsg = "The -SourceType specified was 'Directory' but '$ContentToEncrypt' does not appear to be " +
+        "a valid directory path. This is either because a full path was not provided or because the directory " +
+        "name ends with something that appears to be a file extension. Please correct and try again. Halting!"
+        Write-Error $ErrMsg
         $global:FunctionResult = "1"
         return
     }
-    if ($ContentType -eq "Directory" -and $ContentToEncrypt -notmatch $RegexDirectoryPath) {
-        Write-Verbose "The -ContentType specified was `"Directory`" but $ContentToEncrypt does not appear to be a valid directory path. This is either because a full path was not provided or because the directory name ends with something similar to `".letters`". Please correct and try again. Halting!"
-        Write-Error "The -ContentType specified was `"Directory`" but $ContentToEncrypt does not appear to be a valid directory path. This is either because a full path was not provided or because the directory name ends with something similar to `".letters`". Please correct and try again. Halting!"
+    
+    if ($SourceType -eq "File" -and !$(Test-Path $ContentToEncrypt)) {
+        Write-Error "The path '$ContentToEncrypt' was not found! Halting!"
         $global:FunctionResult = "1"
         return
     }
-    if ($ContentType -eq "Directory" -and $FileToOutput) {
-        Write-Verbose "The -FileToOutput should NOT be used when -ContentType is `"Directory`". Simply using `"-ContentType Directory`" will create new encrypted files in the specified Directory. Halting!"
-        Write-Error "The -FileToOutput should NOT be used when -ContentType is `"Directory`". Simply using `"-ContentType Directory`" will create new encrypted files in the specified Directory. Halting!"
+    if ($SourceType -eq "Directory" -and !$(Test-Path $ContentToEncrypt)) {
+        Write-Error "The path '$ContentToEncrypt' was not found! Halting!"
         $global:FunctionResult = "1"
         return
     }
-    if ($Recurse -and $ContentType -ne "Directory") {
-        Write-Verbose "The -Recurse switch should only be used when -ContentType is `"Directory`"! Halting!"
-        Write-Error "The -Recurse switch should only be used when -ContentType is `"Directory`"! Halting!"
-        $global:FunctionResult = "1"
-        return
-    }
-
-    if ($ContentType -eq "String" -and $ContentToEncrypt.GetType().FullName -ne "System.String") {
-        Write-Verbose "ContentType 'String' was specified but the object passed to ContentToEncrypt is $($ContentToEncrypt.GetType().FullName). Halting!"
-        Write-Error "ContentType 'String' was specified but the object passed to ContentToEncrypt is $($ContentToEncrypt.GetType().FullName). Halting!"
-        $global:FunctionResult = "1"
-        return
-    }
-    if ($ContentType -eq "ArrayofStrings" -and $ContentToEncrypt.GetType().FullName -notmatch "System.String\[\]|System.Object\[\]") {
-        Write-Verbose "ContentType 'ArrayOfStrings' was specified but the object passed to ContentToEncrypt is $($ContentToEncrypt.GetType().FullName). Halting!"
-        Write-Error "ContentType 'ArrayOfStrings' was specified but the object passed to ContentToEncrypt is $($ContentToEncrypt.GetType().FullName). Halting!"
-        $global:FunctionResult = "1"
-        return
-    }
-    if ($ContentType -eq "ArrayofStrings" -and $ContentToEncrypt.GetType().FullName -match "System.Object\[\]") {
-        $InspectArrayObjects = $(foreach ($obj in $ContentToEncrypt) {
-            $obj.GetType().FullName
-        }) | Sort-Object | Get-Unique
-        if ($InspectArrayObjects -ne "System.String") {
-            Write-Verbose "Not all array elements in -ContentToEncrypt are of type System.String! Halting!"
-            Write-Error "Not all array elements in -ContentToEncrypt are of type System.String! Halting!"
-            $global:FunctionResult = "1"
-            return
-        }
-    }
-    if ($ContentType -eq "File" -and !$(Test-Path $ContentToEncrypt)) {
-        Write-Verbose "The path $ContentToEncrypt was not found! Halting!"
-        Write-Error "The path $ContentToEncrypt was not found! Halting!"
-        $global:FunctionResult = "1"
-        return
-    }
-    if ($ContentType -eq "Directory" -and !$(Test-Path $ContentToEncrypt)) {
-        Write-Verbose "The path $ContentToEncrypt was not found! Halting!"
-        Write-Error "The path $ContentToEncrypt was not found! Halting!"
-        $global:FunctionResult = "1"
-        return
-    }
-    if ($ContentType -eq "Directory") {
+    if ($SourceType -eq "Directory") {
         if ($Recurse) {
-            $PossibleFilesToEncrypt = Get-ChildItem -Recurse $ContentToEncrypt | Where-Object {$_.PSIsContainer -eq $false}
+            $PossibleFilesToEncrypt = Get-ChildItem -Path $ContentToEncrypt -File -Recurse
         }
         if (!$Recurse) {
-            $PossibleFilesToEncrypt = Get-ChildItem $ContentToEncrypt | Where-Object {$_.PSIsContainer -eq $false}
+            $PossibleFilesToEncrypt = Get-ChildItem -Path $ContentToEncrypt -File
         }
         if ($PossibleFilesToEncrypt.Count -lt 1) {
-            Write-Verbose "No files were found in the directory $ContentToEncrypt. Halting!"
-            Write-Error "No files were found in the directory $ContentToEncrypt. Halting!"
+            Write-Error "No files were found in the directory '$ContentToEncrypt'. Halting!"
             $global:FunctionResult = "1"
             return
         }
     }
 
     if ($FileToOutput) {
-        $position = $FileToOutput.LastIndexOf("\")
-        $FileToOutputDirectory = $FileToOutput.Substring(0, $position)
-        $FileToOutputFile = $FileToOutput.Substring($position+1)
+        $FileToOutputDirectory = $FileToOutput | Split-Path -Parent
+        $FileToOutputFile = $FileToOutput | Split-Path -Leaf
         $FileToOutputFileSansExt = $($FileToOutputFile.Split("."))[0]
         if (! $(Test-Path $FileToOutputDirectory)) {
-            Write-Host "The directory $FileToOutputDirectory does not exist. Please check the path."
-            $FileToOutput = Read-Host -Prompt "Please enter the full path to the output file that will be created"
-            if (! $(Test-Path $FileToOutputDirectory)) {
-                Write-Error "The directory $FileToOutputDirectory does not exist. Please check the path. Halting!"
-                $global:FunctionResult = "1"
-                return
-            }
+            Write-Error "The directory '$FileToOutputDirectory' does not exist. Please check the path. Halting!"
+            $global:FunctionResult = "1"
+            return
         }
     }
 
-    if ($PathToCertFile -and $CNofCertInStore) {
-        Write-Host "Please use *either* a .pfx certificate file *or*  a certificate in the user's local certificate store to encrypt the file"
-        $WhichCertSwitch = Read-Host -Prompt "Would you like to use the certificate file or the certificate in the local user's cert store? [File/Store]"
-        if ($WhichCertSwitch -eq "File" -or $WhichCertSwitch -eq "Store") {
-            Write-Host "Continuing..."
-        }
-        else {
-            Write-Host "The string entered did not match either 'File' or 'Store'. Please type either 'File' or 'Store'"
-            $WhichCertSwitch = Read-Host -Prompt "Would you like to use the certificate file or the certificate in the local user's cert store? [File/Store]"
-            if ($WhichCertSwitch -eq "File" -or $WhichCertSwitch -eq "Store") {
-                Write-Host "Continuing..."
-            }
-            else {
-                Write-Error "The string entered did not match either 'File' or 'Store'. Halting!"
-                $global:FunctionResult = "1"
-                return
-            }
-        }
-        if ($WhichCertSwitch -eq "File") {
-            Remove-Variable -Name "CNofCertInStore" -Force -ErrorAction SilentlyContinue
-        }
-        if ($WhichCertSwitch -eq "Store") {
-            Remove-Variable -Name "PathToCertFile" -Force -ErrorAction SilentlyContinue
-        }
+    if ($PathToPfxFile -and $CNofCertInStore) {
+        $ErrMsg = "Please use *either* -PathToPfxFile *or* -CNOfCertInStore. Halting!"
+        Write-Error $ErrMsg
+        $global:FunctionResult = "1"
+        return
     }
 
-    # Validate PathToCertFile
-    if ($PathToCertFile) { 
-        if (! (Test-Path $PathToCertFile)) {
-            Write-Host "The $PathToCertFile was not found. Please check to make sure the file exists."
-            $PathToCertFile = Read-Host -Prompt "Please enter the full path to the .pfx certificate file. Example: C:\ps_scripting.pfx"
-            if (! (Test-Path $PathToCertFile)) {
-                Write-Error "The .pfx certificate file was not found at the path specified. Halting."
-                $global:FunctionResult = "1"
-                return
-            }
+    # Validate PathToPfxFile
+    if ($PathToPfxFile) { 
+        if (!$(Test-Path $PathToPfxFile)) {
+            Write-Error "The path '$PathToPfxFile'was not found at the path specified. Halting."
+            $global:FunctionResult = "1"
+            return
         }
 
         # See if Cert is password protected
         try {
             # First, try null password
-            $Cert1 = [System.Security.Cryptography.X509Certificates.X509Certificate2]::new($PathToCertFile, $null, [System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]::Exportable)
+            $Cert1 = [System.Security.Cryptography.X509Certificates.X509Certificate2]::new($PathToPfxFile, $null, [System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]::Exportable)
         }
         catch {
-            Write-Host "Either the Private Key is Password Protected, or it is marked as Unexportable..."
+            Write-Warning "Either the Private Key in '$PathToPfxFile' is Password Protected, or it is marked as Unexportable..."
             if (!$CertPwd) {
-                $CertPwd = Read-Host -Prompt "Please enter the password for the certificate $($TestCertObj.Subject). If there is no password, simply press [ENTER]" -AsSecureString
+                $CertPwd = Read-Host -Prompt "Please enter the password for the certificate. If there is no password, simply press [ENTER]" -AsSecureString
             }
 
             # Next, try $CertPwd 
             try {
-                $Cert1 = [System.Security.Cryptography.X509Certificates.X509Certificate2]::new($PathToCertFile, $CertPwd, [System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]::Exportable)
+                $Cert1 = [System.Security.Cryptography.X509Certificates.X509Certificate2]::new($PathToPfxFile, $CertPwd, [System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]::Exportable)
             }
             catch {
-                Write-Warning "Incorrect certificate password"
-                $CertPwdFailure = $true
+                $ErrMsg "Either the password supplied for the Private Key in $PathToPfxFile' is " +
+                "incorrect or it is not marked as Exportable! Halting!"
+                Write-Error $ErrMsg
+                $global:FunctionResult = "1"
+                return
             }
-        }
-        if ($CertPwdFailure) {
-            Write-Verbose "The password supplied for certificate is incorrect! Halting!"
-            Write-Error "The password supplied for certificate is incorrect! Halting!"
-            $global:FunctionResult = "1"
-            return
         }
     }
 
     # Validate CNofCertInStore
     if ($CNofCertInStore) {
-        $Cert1 = $(Get-ChildItem "Cert:\LocalMachine\My" | Where-Object {$_.Subject -match "CN=$CNofCertInStore"})
+        $Cert1 = @(Get-ChildItem "Cert:\LocalMachine\My" | Where-Object {$_.Subject -match "CN=$CNofCertInStore,"})
 
         if ($Cert1.Count -gt 1) {
-            Write-Host "More than one Certificate with a CN beginning with CN=$CNofCertInStore has been identified. Only one Certificate may be used. 
-            A list of available Certificates in the User Store are as follows:"
-            foreach ($obj1 in $(Get-ChildItem "Cert:\LocalMachine\My").Subject) {$obj1.Split(",")[0]}
-            $CNofCertInStore = Read-Host -Prompt "Please enter the CN of the Certificate you would like to use to encrypt the file"
-            $Cert1 = $(Get-ChildItem "Cert:\LocalMachine\My" | Where-Object {$_.Subject -match "CN=$CNofCertInStore"})
-            if ($Cert1.Count -gt 1) {
-                Write-Error "More than one Certificate with a CN beginning with CN=$CNofCertInStore has been identified. Only one Certificate may be used. Halting!"
-                $global:FunctionResult = "1"
-                return
+            Write-Warning "Multiple certificates under 'Cert:\LocalMachine\My' with a CommonName '$CNofCertInStore' have been identified! They are as follows:"
+            for ($i=0; $i -lt $Cert1.Count; $i++) {
+                Write-Host "$i) " + "Subject: " + $Cert1[$i].Subject + ' | Thumbprint: ' + $Cert1[$i].Thumbprint
             }
+            $ValidChoiceNumbers = 0..$($Cert1.Count-1)
+            $CertChoicePrompt = "Please enter the number that corresponds to the Certificate that you " +
+            "would like to use. [0..$($Cert1.Count-1)]"
+            $CertChoice = Read-Host -Prompt $CertChoicePrompt
+            while ($ValidChoiceNumbers -notcontains $CertChoice) {
+                Write-Host "'$CertChoice' is not a valid choice number! Valid choice numbers are $($ValidChoiceNumbers -join ",")"
+                $CertChoice = Read-Host -Prompt $CertChoicePrompt
+            }
+            
+            $Cert1 = $Cert1[$CertChoice]
         }
         if ($Cert1.Count -lt 1) {
-            Write-Verbose "Unable to find a a certificate matching CN=$CNofCertInStore in `"Cert:\LocalMachine\My`"! Halting!"
-            Write-Error "Unable to find a a certificate matching CN=$CNofCertInStore in `"Cert:\LocalMachine\My`"! Halting!"
+            Write-Error "Unable to find a a certificate matching CN=$CNofCertInStore in 'Cert:\LocalMachine\My'! Halting!"
             $global:FunctionResult = "1"
             return
         }
+        if ($Cert1.Count -eq 1) {
+            $Cert1 = $Cert1[0]
+        }
     }
 
-    if ($(-not $PSBoundParameters['PathToCertFile']) -and $(-not $PSBoundParameters['CNofCertInStore'])) {
-        if ($FileToOutput) {
-            # Create the Self-Signed Cert and add it to the Personal Local Machine Store
-            # Check to see if a Certificate with CN=$FileToOutputFileSansExt exists in the Local Machine Store already
-            $LocalMachineCerts = Get-ChildItem Cert:\LocalMachine\My
-            $FoundMatchingExistingCert = $LocalMachineCerts | Where-Object {$_.Subject -match "CN=$FileToOutputFileSansExt"}
-            if ($FoundMatchingExistingCert.Count -gt 1) {
-                $FoundMatchingExistingCert = $FoundMatchingExistingCert[0]
+    if ($(-not $PSBoundParameters['PathToPfxFile']) -and $(-not $PSBoundParameters['CNofCertInStore'])) {
+        if (!$FileToOutput) {
+            $CNOfNewCert = Read-Host -Prompt "Please enter the desired CN for the new Self-Signed Certificate"
+        }
+        else {
+            $CNOfNewCert = $FileToOutputFileSansExt
+        }
+
+        # Create the Self-Signed Cert and add it to the Personal Local Machine Store
+        # Check to see if a Certificate with CN=$FileToOutputFileSansExt exists in the Local Machine Store already
+        $LocalMachineCerts = @(Get-ChildItem Cert:\LocalMachine\My)
+        $FoundMatchingExistingCert = @($LocalMachineCerts | Where-Object {$_.Subject -match "CN=$CNOfNewCert"})
+
+        if ($FoundMatchingExistingCert.Count -gt 1) {
+            Write-Warning "Multiple certificates under 'Cert:\LocalMachine\My' with a CommonName '$CNofCertInStore' have been identified!"
+
+            $UseExistingCert = Read-Host -Prompt "Would you like to use and existing certificate? [Yes\No]"
+            while (![bool]$($UseExistingCert -match "^yes$|^y$|^no$|^n$")) {
+                Write-Host "'$UseExistingCert' is not a valid choice. Please enter either 'Yes' or 'No'"
+                $UseExistingCert = Read-Host -Prompt "Would you like to use and existing certificate? [Yes\No]"
             }
-            if ($FoundMatchingExistingCert) {
-                $Cert1 = $FoundMatchingExistingCert
+
+            if ($UseExistingCert) {
+                for ($i=0; $i -lt $Cert1.Count; $i++) {
+                    Write-Host "$i) " + "Subject: " + $Cert1[$i].Subject + ' | Thumbprint: ' + $Cert1[$i].Thumbprint
+                }
+                $ValidChoiceNumbers = 0..$($Cert1.Count-1)
+                $CertChoicePrompt = "Please enter the number that corresponds to the Certificate that you " +
+                "would like to use. [0..$($Cert1.Count-1)]"
+                $CertChoice = Read-Host -Prompt $CertChoicePrompt
+                while ($ValidChoiceNumbers -notcontains $CertChoice) {
+                    Write-Host "'$CertChoice' is not a valid choice number! Valid choice numbers are $($ValidChoiceNumbers -join ",")"
+                    $CertChoice = Read-Host -Prompt $CertChoicePrompt
+                }
+                
+                $Cert1 = $Cert1[$CertChoice]
             }
             else {
-                #$Cert1 = New-SelfSignedCertificate -CertStoreLocation "Cert:\LocalMachine\My" -DNSName "$FileToOutputFileSansExt" -KeyExportPolicy "Exportable"
                 $Cert1Prep = Get-EncryptionCert -CommonName $FileToOutputFileSansExt -ExportDirectory $($FileToOutput | Split-Path -Parent)
                 $Cert1 = $Cert1Prep.CertInfo
             }
         }
-        else {
-            $CNOfNewCert = Read-Host -Prompt "Please enter the desired CN for the new Self-Signed Certificate"
-
-            # Check to see if a Certificate with CN=$FileToOutputFileSansExt exists in the Local Machine Store already
-            $LocalMachineCerts = Get-ChildItem Cert:\LocalMachine\My
-            $FoundMatchingExistingCert = $LocalMachineCerts | Where-Object {$_.Subject -match "CN=$CNOfNewCert"}
-            if ($FoundMatchingExistingCert.Count -gt 0) {
-                $UseExistingCertQuery = Read-Host -Prompt "There is already a Certificate with a Common Name (CN) matching $CNOfNewCert in the Local Machine Store. Would you like to use the *old* Certificate or create a *new* one? [old/new]"
-                if ($UseExistingCertQuery -notmatch "old|new" -or $UseExistingCertQuery -eq "old") {
-                    Write-Host "Using existing certificate..."
-                    if ($FoundMatchingExistingCert.Count -gt 1) {
-                        $FoundMatchingExistingCert = $FoundMatchingExistingCert[0]
-                    }
-                    $Cert1 = $FoundMatchingExistingCert
-                }
-                if ($UseExistingCertQuery -eq "new") {
-                    #$Cert1 = New-SelfSignedCertificate -CertStoreLocation "Cert:\LocalMachine\My" -DNSName "$CNOfNewCert`ForEncryption" -KeyExportPolicy "Exportable"
-                    $Cert1Prep = Get-EncryptionCert -CommonName $CNOfNewCert -ExportDirectory $HOME
-                    $Cert1 = $Cert1Prep.CertInfo
-                }
-            }
-            else {
-                #$Cert1 = New-SelfSignedCertificate -CertStoreLocation "Cert:\LocalMachine\My" -DNSName "$CNOfNewCert" -KeyExportPolicy "Exportable"
-                $Cert1Prep = Get-EncryptionCert -CommonName $CNOfNewCert -ExportDirectory $HOME
-                $Cert1 = $Cert1Prep.CertInfo
-            }
+        if ($FoundMatchingExistingCert -eq 1) {
+            $Cert1 = $FoundMatchingExistingCert[0]
+        }
+        if ($FoundMatchingExistingCert -lt 1) {
+            #$Cert1 = New-SelfSignedCertificate -CertStoreLocation "Cert:\LocalMachine\My" -DNSName "$FileToOutputFileSansExt" -KeyExportPolicy "Exportable"
+            $Cert1Prep = Get-EncryptionCert -CommonName $FileToOutputFileSansExt -ExportDirectory $($FileToOutput | Split-Path -Parent)
+            $Cert1 = $Cert1Prep.CertInfo
         }
     }
 
-    # If user did not explicitly use $PathToCertFile, export the $Cert1 to a .pfx file in the same directory as $FileToOutput
+    # If user did not explicitly use $PathToPfxFile, export the $Cert1 to a .pfx file in the same directory as $FileToOutput
     # so that it's abundantly clear that it was used for encryption, even if it's already in the Cert:\LocalMachine\My Store
-    if (!$PathToCertFile) {
+    if (!$PathToPfxFile) {
         $CertName = $($Cert1.Subject | Select-String -Pattern "^CN=[\w]+").Matches.Value -replace "CN=",""
         try {
             if ($FileToOutput) {
                 $PfxOutputDir = $FileToOutput | Split-Path -Parent
             }
-            if (!$FileToOutput -and $ContentType -eq "File") {
+            if (!$FileToOutput -and $SourceType -eq "File") {
                 $PfxOutputDir = $ContentToEncrypt | Split-Path -Parent
             }
-            if (!$FileToOutput -and $ContentType -eq "Directory") {
+            if (!$FileToOutput -and $SourceType -eq "Directory") {
                 $PfxOutputDir = $ContentToEncrypt
             }
             $pfxbytes = $Cert1.Export([System.Security.Cryptography.X509Certificates.X509ContentType]::Pfx)
@@ -547,6 +492,9 @@ function New-EncryptedFile {
                 Write-Verbose "The certificate $CertName is already in the Cert:\LocalMachine\My Store."
             }
             else {
+                # IMPORTANT NOTE: For some reason, eventhough we have the X509Certificate2 object ($Cert1), it may not
+                # have the Property 'PrivateKey' until we import it to the Cert:\LocalMachine\My and then export it.
+                # This could be why why the above export in the ty block failed...
                 Write-Host "Importing $CertName to Cert:\LocalMachine\My Store..."
                 $X509Store = [System.Security.Cryptography.X509Certificates.X509Store]::new([System.Security.Cryptography.X509Certificates.StoreName]::My, [System.Security.Cryptography.X509Certificates.StoreLocation]::LocalMachine)
                 $X509Store.Open([System.Security.Cryptography.X509Certificates.OpenFlags]::ReadWrite)
@@ -560,13 +508,13 @@ function New-EncryptedFile {
             }
 
             try {
-                $CertItem = Get-Item "Cert:\LocalMachine\My\$($Cert1.Thumbprint)"
-                [System.IO.File]::WriteAllBytes("$PfxOutputDir\$CertName.pfx", $CertItem.Export([System.Security.Cryptography.X509Certificates.X509ContentType]::Pkcs12, $CertPwd))
+                $Cert1 = Get-Item "Cert:\LocalMachine\My\$($Cert1.Thumbprint)"
+                [System.IO.File]::WriteAllBytes("$PfxOutputDir\$CertName.pfx", $Cert1.Export([System.Security.Cryptography.X509Certificates.X509ContentType]::Pkcs12, $CertPwd))
                 #Export-PfxCertificate -FilePath "$PfxOutputDir\$CertName.pfx" -Cert "Cert:\LocalMachine\My\$($Cert1.Thumbprint)" -Password $CertPwd
                 $ExportPfxCertificateSuccessful = $true
             }
             catch {
-                Write-Host "Creating a .pfx of containing the public certificate used for encryption failed, but this is not strictly necessary and is only attempted for future convenience. Continuing..."
+                Write-Warning "Creating a .pfx file containing the public certificate used for encryption failed, but this is not strictly necessary and is only attempted for convenience. Continuing..."
                 $ExportPfxCertificateSuccessful = $false
             }
         }
@@ -574,19 +522,10 @@ function New-EncryptedFile {
 
     # If $Cert1 does NOT have a PrivateKey, ask the user if they're ABSOLUTELY POSITIVE they have the private key
     # before proceeding with encryption
-    if ($Cert1.PrivateKey -eq $null -and $Cert1.HasPrivateKey -eq $false -or $Cert1.HasPrivateKey -ne $true) {
-        Write-Warning "Windows reports that there is NO Private Key associated with this System.Security.Cryptography.X509Certificates.X509Certificate2 object!"
+    if ($Cert1.PrivateKey -eq $null -and $Cert1.HasPrivateKey -ne $True) {
+        Write-Warning "Windows reports that there is NO Private Key associated with this X509Certificate2 object!"
         $ShouldWeContinue = Read-Host -Prompt "Are you ABSOLUTELY SURE you have the private key somewhere and want to proceed with encryption? [Yes\No]"
-        if ($ShouldWeContinue -match "Y|y|Yes|yes") {
-            $AreYouReallyCertain = Read-Host -Prompt "Are you REALLY REALLY CERTAIN you want to proceed with encryption? Encryption will NOT proceed unless you type the word 'Affirmative'"
-            if ($AreYouReallyCertain -ne "Affirmative") {
-                Write-Verbose "User specified halt! Halting!"
-                Write-Error "User specified halt! Halting!"
-                $global:FunctionResult = "1"
-                return
-            }
-        }
-        if ($ShouldWeContinue -notmatch "Y|y|Yes|yes") {
+        if (![bool]$($ShouldWeContinue -match "^yes$|^y$")) {
             Write-Verbose "User specified halt! Halting!"
             Write-Error "User specified halt! Halting!"
             $global:FunctionResult = "1"
@@ -598,7 +537,7 @@ function New-EncryptedFile {
 
     ##### BEGIN Main Body #####
     $MaxNumberOfBytesThatCanBeEncryptedViaRSA = ((2048 - 384) / 8) + 37
-    if ($ContentType -eq "String") {
+    if ($SourceType -eq "String") {
         $EncodedBytes1 = [system.text.encoding]::UTF8.GetBytes($ContentToEncrypt)
 
         if ($EncodedBytes1.Length -ge $MaxNumberOfBytesThatCanBeEncryptedViaRSA) {
@@ -612,33 +551,29 @@ function New-EncryptedFile {
         $EncryptedString1 = [System.Convert]::ToBase64String($EncryptedBytes1)
         $EncryptedString1 | Out-File "$FileToOutput.rsaencrypted"
 
-        $CertLocation = if ($PathToCertFile) {
-            $PathToCertFile
+        $CertLocation = if ($PathToPfxFile) {
+            $PathToPfxFile
         } 
         elseif (!$ExportPfxCertificateSuccessful) {
-            "Cert:\LocalMachine\My"
+            "Cert:\LocalMachine\My" + '\' + $Cert1.Thumbprint
         }
         elseif ($ExportPfxCertificateSuccessful) {
-            "Cert:\LocalMachine\My","$PfxOutputDir\$CertName.pfx"
+            $("Cert:\LocalMachine\My" + '\' + $Cert1.Thumbprint),"$PfxOutputDir\$CertName.pfx"
         }
 
-        New-Variable -Name "Output" -Value $(
-            [pscustomobject][ordered]@{
-                FileEncryptedViaRSA                 = "$FileToOutput.rsaencrypted"
-                FileEncryptedViaAES                 = $null
-                OriginalFile                        = $null
-                CertficateUsedForRSAEncryption      = $Cert1
-                LocationOfCertUsedForRSAEncryption  = $CertLocation
-                UnprotectedAESKey                   = $null
-                RSAEncryptedAESKey                  = $null
-                RSAEncryptedAESKeyLocation          = $null
-                AllFileOutputs                      = $(if ($PathToCertFile) {"$FileToOutput.rsaencrypted"} else {"$FileToOutput.rsaencrypted","$PfxOutputDir\$CertName.pfx"})
-            }
-        )
-
-        $Output
+        [pscustomobject]@{
+            FileEncryptedViaRSA                 = "$FileToOutput.rsaencrypted"
+            FileEncryptedViaAES                 = $null
+            OriginalFile                        = $null
+            CertficateUsedForRSAEncryption      = $Cert1
+            LocationOfCertUsedForRSAEncryption  = $CertLocation
+            UnprotectedAESKey                   = $null
+            RSAEncryptedAESKey                  = $null
+            RSAEncryptedAESKeyLocation          = $null
+            AllFileOutputs                      = $(if ($PathToPfxFile) {"$FileToOutput.rsaencrypted"} else {"$FileToOutput.rsaencrypted","$PfxOutputDir\$CertName.pfx"})
+        }
     }
-    if ($ContentType -eq "ArrayOfStrings") {
+    if ($SourceType -eq "ArrayOfStrings") {
         $RSAEncryptedFiles = @()
         for ($i=0; $i -lt $ContentToEncrypt.Count; $i++) {
             # Determine if the contents of the File is too long for Asymetric RSA Encryption with pub cert and priv key
@@ -656,33 +591,29 @@ function New-EncryptedFile {
             $RSAEncryptedFiles += "$FileToOutput$i.rsaencrypted"
         }
 
-        $CertLocation = if ($PathToCertFile) {
-            $PathToCertFile
+        $CertLocation = if ($PathToPfxFile) {
+            $PathToPfxFile
         } 
         elseif (!$ExportPfxCertificateSuccessful) {
-            "Cert:\LocalMachine\My"
+            "Cert:\LocalMachine\My" + '\' + $Cert1.Thumbprint
         }
         elseif ($ExportPfxCertificateSuccessful) {
-            "Cert:\LocalMachine\My","$PfxOutputDir\$CertName.pfx"
+            $("Cert:\LocalMachine\My" + '\' + $Cert1.Thumbprint),"$PfxOutputDir\$CertName.pfx"
         }
 
-        New-Variable -Name "Output" -Value $(
-            [pscustomobject][ordered]@{
-                FilesEncryptedViaRSA                = $RSAEncryptedFiles
-                FilesEncryptedViaAES                = $null
-                OriginalFiles                       = $null
-                CertficateUsedForRSAEncryption      = $Cert1
-                LocationOfCertUsedForRSAEncryption  = $CertLocation
-                UnprotectedAESKey                   = $null
-                RSAEncryptedAESKey                  = $null
-                RSAEncryptedAESKeyLocation          = $null
-                AllFileOutputs                      = $(if ($PathToCertFile) {"$FileToOutput.rsaencrypted"} else {"$FileToOutput.rsaencrypted","$PfxOutputDir\$CertName.pfx"})
-            }
-        )
-
-        $Output
+        [pscustomobject]@{
+            FilesEncryptedViaRSA                = $RSAEncryptedFiles
+            FilesEncryptedViaAES                = $null
+            OriginalFiles                       = $null
+            CertficateUsedForRSAEncryption      = $Cert1
+            LocationOfCertUsedForRSAEncryption  = $CertLocation
+            UnprotectedAESKey                   = $null
+            RSAEncryptedAESKey                  = $null
+            RSAEncryptedAESKeyLocation          = $null
+            AllFileOutputs                      = $(if ($PathToPfxFile) {"$FileToOutput.rsaencrypted"} else {"$FileToOutput.rsaencrypted","$PfxOutputDir\$CertName.pfx"})
+        }
     }
-    if ($ContentType -eq "File") {
+    if ($SourceType -eq "File") {
         $OriginalFile = $ContentToEncrypt
 
         # Determine if the contents of the File is too long for Asymetric RSA Encryption with pub cert and priv key
@@ -702,7 +633,7 @@ function New-EncryptedFile {
             # Copy the original file and update file name on copy to indicate it's the original
             Copy-Item -Path $ContentToEncrypt -Destination "$ContentToEncrypt.original"
 
-            $AESKey = CreateAESKey
+            $AESKey = NewCryptographyKey -AsPlainText
             $FileEncryptionInfo = EncryptFile $ContentToEncrypt $AESKey
 
             # Save $AESKey for later use in the same directory as $ContentToEncrypt
@@ -727,37 +658,33 @@ function New-EncryptedFile {
 
         $AllFileOutputsPrep = $RSAEncryptedFileName,$AESEncryptedFileName,"$OriginalFile.original",$RSAEncryptedAESKeyLocation
         $AllFileOutputs = $AllFileOutputsPrep | foreach {if ($_ -ne $null) {$_}}
-        if (!$PathToCertFile) {
+        if (!$PathToPfxFile) {
             $AllFileOutputs = $AllFileOutputs + "$PfxOutputDir\$CertName.pfx"
         }
 
-        $CertLocation = if ($PathToCertFile) {
-            $PathToCertFile
+        $CertLocation = if ($PathToPfxFile) {
+            $PathToPfxFile
         } 
         elseif (!$ExportPfxCertificateSuccessful) {
-            "Cert:\LocalMachine\My"
+            "Cert:\LocalMachine\My" + '\' + $Cert1.Thumbprint
         }
         elseif ($ExportPfxCertificateSuccessful) {
-            "Cert:\LocalMachine\My","$PfxOutputDir\$CertName.pfx"
+            $("Cert:\LocalMachine\My" + '\' + $Cert1.Thumbprint),"$PfxOutputDir\$CertName.pfx"
         }
 
-        New-Variable -Name "Output" -Value $(
-            [pscustomobject][ordered]@{
-                FileEncryptedViaRSA                 = $FileEncryptedViaRSA
-                FileEncryptedViaAES                 = $FileEncryptedViaAES
-                OriginalFile                        = "$OriginalFile.original"
-                CertficateUsedForRSAEncryption      = $Cert1
-                LocationOfCertUsedForRSAEncryption  = $CertLocation
-                UnprotectedAESKey                   = $(if ($AESKey) {$FileEncryptionInfo.AESKey})
-                RSAEncryptedAESKey                  = $(if ($AESKey) {$EncryptedString1})
-                RSAEncryptedAESKeyLocation          = $RSAEncryptedAESKeyLocation
-                AllFileOutputs                      = $AllFileOutputs
-            }
-        )
-
-        $Output
+        [pscustomobject]@{
+            FileEncryptedViaRSA                 = $FileEncryptedViaRSA
+            FileEncryptedViaAES                 = $FileEncryptedViaAES
+            OriginalFile                        = "$OriginalFile.original"
+            CertficateUsedForRSAEncryption      = $Cert1
+            LocationOfCertUsedForRSAEncryption  = $CertLocation
+            UnprotectedAESKey                   = $(if ($AESKey) {$FileEncryptionInfo.AESKey})
+            RSAEncryptedAESKey                  = $(if ($AESKey) {$EncryptedString1})
+            RSAEncryptedAESKeyLocation          = $RSAEncryptedAESKeyLocation
+            AllFileOutputs                      = $AllFileOutputs
+        }
     }
-    if ($ContentType -eq "Directory") {
+    if ($SourceType -eq "Directory") {
         if (!$Recurse) {
             $FilesToEncryptPrep = $(Get-ChildItem $ContentToEncrypt | Where-Object {$_.PSIsContainer -eq $false}).FullName
         }
@@ -794,7 +721,7 @@ function New-EncryptedFile {
 
         $AESKeyDir = $ContentToEncrypt
         $AESKeyFileName = "$($AESKeyDir | Split-Path -Leaf).aeskey"
-        $AESKey = CreateAESKey
+        $AESKey = NewCryptographyKey -AsPlainText
         $FileEncryptionInfo = EncryptFile $FilesToEncryptViaAES $AESKey
 
         # Save $AESKey for later use in the same directory as $file
@@ -822,36 +749,101 @@ function New-EncryptedFile {
 
         $AllFileOutputsPrep = $RSAEncryptedFileNames,$AESEncryptedFileNames,$OriginalFiles,$RSAEncryptedAESKeyLocation
         $AllFileOutputs = foreach ($element in $AllFileOutputsPrep) {if ($element -ne $null) {$element}}
-        if (!$PathToCertFile) {
+        if (!$PathToPfxFile) {
             $AllFileOutputs = $AllFileOutputs + "$PfxOutputDir\$CertName.pfx"
         }
 
-        $CertLocation = if ($PathToCertFile) {
-            $PathToCertFile
+        $CertLocation = if ($PathToPfxFile) {
+            $PathToPfxFile
         } 
         elseif (!$ExportPfxCertificateSuccessful) {
-            "Cert:\LocalMachine\My"
+            "Cert:\LocalMachine\My" + '\' + $Cert1.Thumbprint
         }
         elseif ($ExportPfxCertificateSuccessful) {
-            "Cert:\LocalMachine\My","$PfxOutputDir\$CertName.pfx"
+            $("Cert:\LocalMachine\My" + '\' + $Cert1.Thumbprint),"$PfxOutputDir\$CertName.pfx"
         }
 
-        New-Variable -Name "Output" -Value $(
-            [pscustomobject][ordered]@{
-                FilesEncryptedViaRSA                = $RSAEncryptedFileNames
-                FilesEncryptedViaAES                = $AESEncryptedFileNames
-                OriginalFiles                       = $OriginalFiles
-                CertficateUsedForRSAEncryption      = $Cert1
-                LocationOfCertUsedForRSAEncryption  = $CertLocation
-                UnprotectedAESKey                   = $FileEncryptionInfo.AESKey
-                RSAEncryptedAESKey                  = $EncryptedString1
-                RSAEncryptedAESKeyLocation          = $RSAEncryptedAESKeyLocation
-                AllFileOutputs                      = $AllFileOutputs
-            }
-        )
-
-        $Output
+        [pscustomobject][ordered]@{
+            FilesEncryptedViaRSA                = $RSAEncryptedFileNames
+            FilesEncryptedViaAES                = $AESEncryptedFileNames
+            OriginalFiles                       = $OriginalFiles
+            CertficateUsedForRSAEncryption      = $Cert1
+            LocationOfCertUsedForRSAEncryption  = $CertLocation
+            UnprotectedAESKey                   = $FileEncryptionInfo.AESKey
+            RSAEncryptedAESKey                  = $EncryptedString1
+            RSAEncryptedAESKeyLocation          = $RSAEncryptedAESKeyLocation
+            AllFileOutputs                      = $AllFileOutputs
+        }
     }
 
     ##### END Main Body #####
 }
+# SIG # Begin signature block
+# MIIMiAYJKoZIhvcNAQcCoIIMeTCCDHUCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
+# gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUZxwV1X4YFaeVXEjiaPouaw+T
+# ETmgggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
+# 9w0BAQsFADAwMQwwCgYDVQQGEwNMQUIxDTALBgNVBAoTBFpFUk8xETAPBgNVBAMT
+# CFplcm9EQzAxMB4XDTE3MDkyMDIxMDM1OFoXDTE5MDkyMDIxMTM1OFowPTETMBEG
+# CgmSJomT8ixkARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMT
+# B1plcm9TQ0EwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDCwqv+ROc1
+# bpJmKx+8rPUUfT3kPSUYeDxY8GXU2RrWcL5TSZ6AVJsvNpj+7d94OEmPZate7h4d
+# gJnhCSyh2/3v0BHBdgPzLcveLpxPiSWpTnqSWlLUW2NMFRRojZRscdA+e+9QotOB
+# aZmnLDrlePQe5W7S1CxbVu+W0H5/ukte5h6gsKa0ktNJ6X9nOPiGBMn1LcZV/Ksl
+# lUyuTc7KKYydYjbSSv2rQ4qmZCQHqxyNWVub1IiEP7ClqCYqeCdsTtfw4Y3WKxDI
+# JaPmWzlHNs0nkEjvnAJhsRdLFbvY5C2KJIenxR0gA79U8Xd6+cZanrBUNbUC8GCN
+# wYkYp4A4Jx+9AgMBAAGjggEqMIIBJjASBgkrBgEEAYI3FQEEBQIDAQABMCMGCSsG
+# AQQBgjcVAgQWBBQ/0jsn2LS8aZiDw0omqt9+KWpj3DAdBgNVHQ4EFgQUicLX4r2C
+# Kn0Zf5NYut8n7bkyhf4wGQYJKwYBBAGCNxQCBAweCgBTAHUAYgBDAEEwDgYDVR0P
+# AQH/BAQDAgGGMA8GA1UdEwEB/wQFMAMBAf8wHwYDVR0jBBgwFoAUdpW6phL2RQNF
+# 7AZBgQV4tgr7OE0wMQYDVR0fBCowKDAmoCSgIoYgaHR0cDovL3BraS9jZXJ0ZGF0
+# YS9aZXJvREMwMS5jcmwwPAYIKwYBBQUHAQEEMDAuMCwGCCsGAQUFBzAChiBodHRw
+# Oi8vcGtpL2NlcnRkYXRhL1plcm9EQzAxLmNydDANBgkqhkiG9w0BAQsFAAOCAQEA
+# tyX7aHk8vUM2WTQKINtrHKJJi29HaxhPaHrNZ0c32H70YZoFFaryM0GMowEaDbj0
+# a3ShBuQWfW7bD7Z4DmNc5Q6cp7JeDKSZHwe5JWFGrl7DlSFSab/+a0GQgtG05dXW
+# YVQsrwgfTDRXkmpLQxvSxAbxKiGrnuS+kaYmzRVDYWSZHwHFNgxeZ/La9/8FdCir
+# MXdJEAGzG+9TwO9JvJSyoGTzu7n93IQp6QteRlaYVemd5/fYqBhtskk1zDiv9edk
+# mHHpRWf9Xo94ZPEy7BqmDuixm4LdmmzIcFWqGGMo51hvzz0EaE8K5HuNvNaUB/hq
+# MTOIB5145K8bFOoKHO4LkTCCBc8wggS3oAMCAQICE1gAAAH5oOvjAv3166MAAQAA
+# AfkwDQYJKoZIhvcNAQELBQAwPTETMBEGCgmSJomT8ixkARkWA0xBQjEUMBIGCgmS
+# JomT8ixkARkWBFpFUk8xEDAOBgNVBAMTB1plcm9TQ0EwHhcNMTcwOTIwMjE0MTIy
+# WhcNMTkwOTIwMjExMzU4WjBpMQswCQYDVQQGEwJVUzELMAkGA1UECBMCUEExFTAT
+# BgNVBAcTDFBoaWxhZGVscGhpYTEVMBMGA1UEChMMRGlNYWdnaW8gSW5jMQswCQYD
+# VQQLEwJJVDESMBAGA1UEAxMJWmVyb0NvZGUyMIIBIjANBgkqhkiG9w0BAQEFAAOC
+# AQ8AMIIBCgKCAQEAxX0+4yas6xfiaNVVVZJB2aRK+gS3iEMLx8wMF3kLJYLJyR+l
+# rcGF/x3gMxcvkKJQouLuChjh2+i7Ra1aO37ch3X3KDMZIoWrSzbbvqdBlwax7Gsm
+# BdLH9HZimSMCVgux0IfkClvnOlrc7Wpv1jqgvseRku5YKnNm1JD+91JDp/hBWRxR
+# 3Qg2OR667FJd1Q/5FWwAdrzoQbFUuvAyeVl7TNW0n1XUHRgq9+ZYawb+fxl1ruTj
+# 3MoktaLVzFKWqeHPKvgUTTnXvEbLh9RzX1eApZfTJmnUjBcl1tCQbSzLYkfJlJO6
+# eRUHZwojUK+TkidfklU2SpgvyJm2DhCtssFWiQIDAQABo4ICmjCCApYwDgYDVR0P
+# AQH/BAQDAgeAMBMGA1UdJQQMMAoGCCsGAQUFBwMDMB0GA1UdDgQWBBS5d2bhatXq
+# eUDFo9KltQWHthbPKzAfBgNVHSMEGDAWgBSJwtfivYIqfRl/k1i63yftuTKF/jCB
+# 6QYDVR0fBIHhMIHeMIHboIHYoIHVhoGubGRhcDovLy9DTj1aZXJvU0NBKDEpLENO
+# PVplcm9TQ0EsQ049Q0RQLENOPVB1YmxpYyUyMEtleSUyMFNlcnZpY2VzLENOPVNl
+# cnZpY2VzLENOPUNvbmZpZ3VyYXRpb24sREM9emVybyxEQz1sYWI/Y2VydGlmaWNh
+# dGVSZXZvY2F0aW9uTGlzdD9iYXNlP29iamVjdENsYXNzPWNSTERpc3RyaWJ1dGlv
+# blBvaW50hiJodHRwOi8vcGtpL2NlcnRkYXRhL1plcm9TQ0EoMSkuY3JsMIHmBggr
+# BgEFBQcBAQSB2TCB1jCBowYIKwYBBQUHMAKGgZZsZGFwOi8vL0NOPVplcm9TQ0Es
+# Q049QUlBLENOPVB1YmxpYyUyMEtleSUyMFNlcnZpY2VzLENOPVNlcnZpY2VzLENO
+# PUNvbmZpZ3VyYXRpb24sREM9emVybyxEQz1sYWI/Y0FDZXJ0aWZpY2F0ZT9iYXNl
+# P29iamVjdENsYXNzPWNlcnRpZmljYXRpb25BdXRob3JpdHkwLgYIKwYBBQUHMAKG
+# Imh0dHA6Ly9wa2kvY2VydGRhdGEvWmVyb1NDQSgxKS5jcnQwPQYJKwYBBAGCNxUH
+# BDAwLgYmKwYBBAGCNxUIg7j0P4Sb8nmD8Y84g7C3MobRzXiBJ6HzzB+P2VUCAWQC
+# AQUwGwYJKwYBBAGCNxUKBA4wDDAKBggrBgEFBQcDAzANBgkqhkiG9w0BAQsFAAOC
+# AQEAszRRF+YTPhd9UbkJZy/pZQIqTjpXLpbhxWzs1ECTwtIbJPiI4dhAVAjrzkGj
+# DyXYWmpnNsyk19qE82AX75G9FLESfHbtesUXnrhbnsov4/D/qmXk/1KD9CE0lQHF
+# Lu2DvOsdf2mp2pjdeBgKMRuy4cZ0VCc/myO7uy7dq0CvVdXRsQC6Fqtr7yob9NbE
+# OdUYDBAGrt5ZAkw5YeL8H9E3JLGXtE7ir3ksT6Ki1mont2epJfHkO5JkmOI6XVtg
+# anuOGbo62885BOiXLu5+H2Fg+8ueTP40zFhfLh3e3Kj6Lm/NdovqqTBAsk04tFW9
+# Hp4gWfVc0gTDwok3rHOrfIY35TGCAfUwggHxAgEBMFQwPTETMBEGCgmSJomT8ixk
+# ARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMTB1plcm9TQ0EC
+# E1gAAAH5oOvjAv3166MAAQAAAfkwCQYFKw4DAhoFAKB4MBgGCisGAQQBgjcCAQwx
+# CjAIoAKAAKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcCAQQwHAYKKwYBBAGC
+# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFN21H95wxAlJXNyM
+# ThevVxfDjl3qMA0GCSqGSIb3DQEBAQUABIIBAFRxwM/6OepvLFJMIccBxhvrdzmw
+# gRtfGSOBtUj5tDZKz8zloglnnYVdAoq2vdsg8MoRCJrORmJU13MKUn+sE89oNL27
+# j12V2lw9Fm7FC4j8/1+B5XwTFjuqAFQFwIGNb+bIFubG7Z4+TS54SDiNq98+KgNq
+# V4fzBZmz42BY/Tg1FDG1ZX5wv7KZ1th1n3Jw+E1z7LvGb+DLW3L22fe9lK5jHu3w
+# loLkHslwq2SedtEFkAA9as2cu+hM7BsIzun/+MOemIhnFf0XuiafRRWNQWy2nGK6
+# jehwgujWah6inGetpYPGYhG7fjcdDEHKtaHeWzmWGHzrta+pVHJ9ba+1Les=
+# SIG # End signature block

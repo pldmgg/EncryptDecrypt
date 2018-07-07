@@ -1,89 +1,34 @@
-<#
-    .SYNOPSIS
-        This function creates a New Self-Signed Certificate meant to be used for DSC secret encryption and exports it to the
-        specified directory.
-
-    .DESCRIPTION
-        See .SYNOPSIS
-
-    .NOTES
-
-    .PARAMETER MachineName
-        This parameter is MANDATORY.
-
-        This parameter takes a string that represents the Subject Alternative Name (SAN) on the Self-Signed Certificate.
-
-    .PARAMETER ExportDirectory
-        This parameter is MANDATORY.
-
-        This parameter takes a string that represents the full path to a directory that will contain the new Self-Signed Certificate.
-
-    .EXAMPLE
-        # Import the MiniLab Module and -
-
-        PS C:\Users\zeroadmin> Get-EncryptionCert -CommonName "EncryptionCert" -ExportDirectory "$HOME\EncryptionCerts"
-
-#>
-function Get-EncryptionCert {
+function NewUniqueString {
     [CmdletBinding()]
-    param (
-        [Parameter(Mandatory=$True)]
-        [string]$CommonName,
+    Param(
+        [Parameter(Mandatory=$False)]
+        [string[]]$ArrayOfStrings,
 
         [Parameter(Mandatory=$True)]
-        [string]$ExportDirectory
+        [string]$PossibleNewUniqueString
     )
 
-    if (!$(Test-Path $ExportDirectory)) {
-        Write-Error "The path '$ExportDirectory' was not found! Halting!"
-        $global:FunctionResult = "1"
-        return
+    if (!$ArrayOfStrings -or $ArrayOfStrings.Count -eq 0 -or ![bool]$($ArrayOfStrings -match "[\w]")) {
+        $PossibleNewUniqueString
     }
-
-    $CertificateFriendlyName = $CommonName
-    $Cert = Get-ChildItem -Path "Cert:\LocalMachine\My" | Where-Object {
-        $_.FriendlyName -eq $CertificateFriendlyName
-    } | Select-Object -First 1
-
-    if (!$Cert) {
-        $NewSelfSignedCertExSplatParams = @{
-            Subject             = "CN=$CommonName"
-            EKU                 = @('1.3.6.1.4.1.311.80.1','1.3.6.1.5.5.7.3.1','1.3.6.1.5.5.7.3.2')
-            KeyUsage            = 'DigitalSignature, KeyEncipherment, DataEncipherment'
-            SAN                 = $CommonName
-            FriendlyName        = $CertificateFriendlyName
-            Exportable          = $True
-            StoreLocation       = 'LocalMachine'
-            StoreName           = 'My'
-            KeyLength           = 2048
-            ProviderName        = 'Microsoft Enhanced Cryptographic Provider v1.0'
-            AlgorithmName       = "RSA"
-            SignatureAlgorithm  = "SHA256"
+    else {
+        $OriginalString = $PossibleNewUniqueString
+        $Iteration = 1
+        while ($ArrayOfStrings -contains $PossibleNewUniqueString) {
+            $AppendedValue = "_$Iteration"
+            $PossibleNewUniqueString = $OriginalString + $AppendedValue
+            $Iteration++
         }
 
-        New-SelfsignedCertificateEx @NewSelfSignedCertExSplatParams
-
-        # There is a slight delay before new cert shows up in Cert:
-        # So wait for it to show.
-        while (!$Cert) {
-            $Cert = Get-ChildItem -Path "Cert:\LocalMachine\My" | Where-Object {$_.FriendlyName -eq $CertificateFriendlyName}
-        }
-    }
-
-    #$null = Export-Certificate -Type CERT -Cert $Cert -FilePath "$ExportDirectory\$CommonName.cer"
-    [System.IO.File]::WriteAllBytes("$ExportDirectory\$CommonName.cer", $Cert.Export([System.Security.Cryptography.X509Certificates.X509ContentType]::Cert))
-
-    [pscustomobject]@{
-        CertFile        = Get-Item "$ExportDirectory\$CommonName.cer"
-        CertInfo        = $Cert
+        $PossibleNewUniqueString
     }
 }
 
 # SIG # Begin signature block
 # MIIMiAYJKoZIhvcNAQcCoIIMeTCCDHUCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQU4Pqz1eX2Rlxr7eelJNlxBSYe
-# eimgggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUHvzU0BS5wRqJMvA/U8Exx1pZ
+# 1yOgggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
 # 9w0BAQsFADAwMQwwCgYDVQQGEwNMQUIxDTALBgNVBAoTBFpFUk8xETAPBgNVBAMT
 # CFplcm9EQzAxMB4XDTE3MDkyMDIxMDM1OFoXDTE5MDkyMDIxMTM1OFowPTETMBEG
 # CgmSJomT8ixkARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMT
@@ -140,11 +85,11 @@ function Get-EncryptionCert {
 # ARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMTB1plcm9TQ0EC
 # E1gAAAH5oOvjAv3166MAAQAAAfkwCQYFKw4DAhoFAKB4MBgGCisGAQQBgjcCAQwx
 # CjAIoAKAAKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcCAQQwHAYKKwYBBAGC
-# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFMfcOzm4aI0/ZXao
-# tydMYn5QXxx9MA0GCSqGSIb3DQEBAQUABIIBAJFf/fiGHUkuEb6tB8PUlvLXjyt3
-# UiQaKZKls3+g6Ku/wBL/EbA2d8KxLSKq2WACfBzN59NPH9q9xi0NA+CHkBGov3x/
-# Mm0JcaYWc7SMxDgMt4jxmQMFLm5uiEzNr7/Z1nIzETMUXoKPzGOcHGd6bMEtg8xg
-# H9ksAxp6GVG9Q7m/GsQY5a+sU0Rhq0WjSbelcyQPsMA6oyOkVducekTeroSBWQua
-# swBhEr1awfMI3DRfrAJjHVVsCZuu2DLBKtZI+YkkBaj0CnyLDpc6vw0aruNREzln
-# +xoL/LHgbXI9vvLcN6jdaszV7/7BrHOeE8Yi8IG7hmh/t0Yl4kQAEoRkuB0=
+# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFHMnywp7X3TUt9g1
+# T+lyVTmzc2iUMA0GCSqGSIb3DQEBAQUABIIBAEtlSCtqd/fhiHW62xifYnhUulT4
+# XRHbnvigZuhZUqTxv8/YfOsfJJ5Yura4IHLxaV0DS2ifjdSSCj/QyBbLQzyxGouI
+# ZzzzbTTdxa0YS2FfeLpvKjQkMUmQu1JkP2w/VY4AXxBjJpYmbOUXgnTd0jCLOkTJ
+# aHq8/13YxkcfhEKFADSrtgRErPrgfscb+gJFhpLKcN2VjPDZF5mFrQFYjmKKDZY0
+# KPVu0i0ZgKamFGHpvO9eB5Mj9BFRDd7JsVEeracbkW3Ui050jqeiZL6pSZF2Qb9E
+# 9L3fPyvqDCIpMzjKteu2P1G4zQTbWbDuMH4wUjr8h/uJ4l99X+0HCpFbdpg=
 # SIG # End signature block
