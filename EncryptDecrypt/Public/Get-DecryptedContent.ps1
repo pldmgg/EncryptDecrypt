@@ -453,7 +453,7 @@ function Get-DecryptedContent {
     
     # Validate CNofCertInStore {
     if ($CNofCertInStore) {
-        $Cert1 = @(Get-ChildItem "Cert:\LocalMachine\My" | Where-Object {$_.Subject -match "CN=$CNofCertInStore,"})
+        [array]$Cert1 = @(Get-ChildItem "Cert:\LocalMachine\My" | Where-Object {$_.Subject -match "CN=$CNofCertInStore,"})
 
         if ($Cert1.Count -gt 1) {
             Write-Warning "Multiple certificates under 'Cert:\LocalMachine\My' with a CommonName '$CNofCertInStore' have been identified! They are as follows:"
@@ -622,8 +622,27 @@ function Get-DecryptedContent {
                 $null = $DecryptedFiles.Add($OutputFile)
             }
             catch {
-                #Write-Error $_
-                $null = $FailedToDecryptFiles.Add($OutputFile)
+                try {
+                    $EncryptedBytes2 = [System.Convert]::FromBase64String($EncryptedString2)
+                    if ($PrivateKeyInfo) {
+                        #$DecryptedBytes2 = $PrivateKeyInfo.Decrypt($EncryptedBytes2, $true)
+                        $DecryptedBytes2 = $PrivateKeyInfo.Decrypt($EncryptedBytes2, [System.Security.Cryptography.RSAEncryptionPadding]::Pkcs1)
+                    }
+                    else {
+                        #$DecryptedBytes2 = $Cert1.PrivateKey.Decrypt($EncryptedBytes2, $true)
+                        $DecryptedBytes2 = $Cert1.PrivateKey.Decrypt($EncryptedBytes2, [System.Security.Cryptography.RSAEncryptionPadding]::Pkcs1)
+                    }
+                    $DecryptedContent2 = [system.text.encoding]::UTF8.GetString($DecryptedBytes2)
+                    $DecryptedContent2 = $DecryptedContent2.Trim()
+                    # Need to write $DecryptedContent2 using [System.IO.File]::WriteAllLines() to strip BOM if present
+                    [System.IO.File]::WriteAllLines("$OutputFile", $DecryptedContent2)
+
+                    $null = $DecryptedFiles.Add($OutputFile)
+                }
+                catch {
+                    #Write-Error $_
+                    $null = $FailedToDecryptFiles.Add($OutputFile)
+                }
             }
         }
         if ($SourceType -eq "ArrayOfStrings") {
@@ -655,8 +674,27 @@ function Get-DecryptedContent {
                     $null = $DecryptedFiles.Add($OutputFile)
                 }
                 catch {
-                    #Write-Error $_
-                    $null = $FailedToDecryptFiles.Add($Outputfile)
+                    try {
+                        $EncryptedBytes2 = [System.Convert]::FromBase64String($EncryptedString2)
+                        if ($PrivateKeyInfo) {
+                            #$DecryptedBytes2 = $PrivateKeyInfo.Decrypt($EncryptedBytes2, $true)
+                            $DecryptedBytes2 = $PrivateKeyInfo.Decrypt($EncryptedBytes2, [System.Security.Cryptography.RSAEncryptionPadding]::Pkcs1)
+                        }
+                        else {
+                            #$DecryptedBytes2 = $Cert1.PrivateKey.Decrypt($EncryptedBytes2, $true)
+                            $DecryptedBytes2 = $Cert1.PrivateKey.Decrypt($EncryptedBytes2, [System.Security.Cryptography.RSAEncryptionPadding]::Pkcs1)
+                        }
+                        $DecryptedContent2 = [system.text.encoding]::UTF8.GetString($DecryptedBytes2)
+                        $DecryptedContent2 = $DecryptedContent2.Trim()
+                        # Need to write $DecryptedContent2 using [System.IO.File]::WriteAllLines() to strip BOM if present
+                        [System.IO.File]::WriteAllLines("$OutputFile", $DecryptedContent2)
+    
+                        $null = $DecryptedFiles.Add($OutputFile)
+                    }
+                    catch {
+                        #Write-Error $_
+                        $null = $FailedToDecryptFiles.Add($OutputFile)
+                    }
                 }
             }
         }
@@ -690,8 +728,27 @@ function Get-DecryptedContent {
                     $null = $DecryptedFiles.Add($OutputFile)
                 }
                 catch {
-                    #Write-Error $_
-                    $null = $FailedToDecryptFiles.Add($Outputfile)
+                    try {
+                        $EncryptedBytes2 = [System.Convert]::FromBase64String($EncryptedString2)
+                        if ($PrivateKeyInfo) {
+                            #$DecryptedBytes2 = $PrivateKeyInfo.Decrypt($EncryptedBytes2, $true)
+                            $DecryptedBytes2 = $PrivateKeyInfo.Decrypt($EncryptedBytes2, [System.Security.Cryptography.RSAEncryptionPadding]::Pkcs1)
+                        }
+                        else {
+                            #$DecryptedBytes2 = $Cert1.PrivateKey.Decrypt($EncryptedBytes2, $true)
+                            $DecryptedBytes2 = $Cert1.PrivateKey.Decrypt($EncryptedBytes2, [System.Security.Cryptography.RSAEncryptionPadding]::Pkcs1)
+                        }
+                        $DecryptedContent2 = [system.text.encoding]::UTF8.GetString($DecryptedBytes2)
+                        $DecryptedContent2 = $DecryptedContent2.Trim()
+                        # Need to write $DecryptedContent2 using [System.IO.File]::WriteAllLines() to strip BOM if present
+                        [System.IO.File]::WriteAllLines("$OutputFile", $DecryptedContent2)
+    
+                        $null = $DecryptedFiles.Add($OutputFile)
+                    }
+                    catch {
+                        #Write-Error $_
+                        $null = $FailedToDecryptFiles.Add($OutputFile)
+                    }
                 }
             }
         }
@@ -802,8 +859,27 @@ function Get-DecryptedContent {
                     $null = $DecryptedFiles.Add($OutputFile)
                 }
                 catch {
-                    #Write-Error $_
-                    $null = $FailedToDecryptFiles.Add($(Get-ChildItem $file).FullName)
+                    try {
+                        $EncryptedBytes2 = [System.Convert]::FromBase64String($EncryptedString2)
+                        if ($PrivateKeyInfo) {
+                            #$DecryptedBytes2 = $PrivateKeyInfo.Decrypt($EncryptedBytes2, $true)
+                            $DecryptedBytes2 = $PrivateKeyInfo.Decrypt($EncryptedBytes2, [System.Security.Cryptography.RSAEncryptionPadding]::Pkcs1)
+                        }
+                        else {
+                            #$DecryptedBytes2 = $Cert1.PrivateKey.Decrypt($EncryptedBytes2, $true)
+                            $DecryptedBytes2 = $Cert1.PrivateKey.Decrypt($EncryptedBytes2, [System.Security.Cryptography.RSAEncryptionPadding]::Pkcs1)
+                        }
+                        $DecryptedContent2 = [system.text.encoding]::UTF8.GetString($DecryptedBytes2)
+                        $DecryptedContent2 = $DecryptedContent2.Trim()
+                        # Need to write $DecryptedContent2 using [System.IO.File]::WriteAllLines() to strip BOM if present
+                        [System.IO.File]::WriteAllLines("$OutputFile", $DecryptedContent2)
+    
+                        $null = $DecryptedFiles.Add($OutputFile)
+                    }
+                    catch {
+                        #Write-Error $_
+                        $null = $FailedToDecryptFiles.Add($OutputFile)
+                    }
                 }
             }
         }
@@ -847,8 +923,8 @@ function Get-DecryptedContent {
 # SIG # Begin signature block
 # MIIMiAYJKoZIhvcNAQcCoIIMeTCCDHUCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUroT9j5BqDFpp18h9y1ukYV0d
-# 1fSgggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQU4XZBHkyLV68lI7S0IMJBPz6a
+# 4kagggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
 # 9w0BAQsFADAwMQwwCgYDVQQGEwNMQUIxDTALBgNVBAoTBFpFUk8xETAPBgNVBAMT
 # CFplcm9EQzAxMB4XDTE3MDkyMDIxMDM1OFoXDTE5MDkyMDIxMTM1OFowPTETMBEG
 # CgmSJomT8ixkARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMT
@@ -905,11 +981,11 @@ function Get-DecryptedContent {
 # ARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMTB1plcm9TQ0EC
 # E1gAAAH5oOvjAv3166MAAQAAAfkwCQYFKw4DAhoFAKB4MBgGCisGAQQBgjcCAQwx
 # CjAIoAKAAKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcCAQQwHAYKKwYBBAGC
-# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFJ82ZXaQoL0t9Q6M
-# dQQbUiB7Bw7ZMA0GCSqGSIb3DQEBAQUABIIBALvwtfuEsvDcg97ALrSKvBsZoRXF
-# 2iwxwaYmKl6QqjnUraOgkinwK2mLt1oigzxc3bLXr/ZPSPXgOP9VqOEjXze9z4S4
-# l4D2WwtR14899fiES4npv9Qx3b9TP2QtVp5562E0DiHQ95jdkefj/bPP9txVSY1l
-# pUMChYMjHold15dJDl8YXx4C6EA5rVhw6KbQidq2PmpGZfHAJ1V/ee0rqPW8I3BB
-# N33wEZUkUm79EMoTKxTg4jOt7+kmKOSVbAOwlmw57dMG2m5EqVWXg/SragsSaOSx
-# etE1Q8bgA6h11MfnaqYX3SCkK7mLPVPfxVtwRfhawF+Be9VjS5sskHSnSMA=
+# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFCuiO+Pxxk6ktOoW
+# 4//xq+QYyOPvMA0GCSqGSIb3DQEBAQUABIIBABOYirljht5FghiOqD/mgGbCpXdO
+# yoSv9PtTkqAyeRZyHPHS77gb4ap8ybwedcMUtDy8CZkm96BaXtYfrVOoH6kwxbDM
+# D9EwOYVeG35NfUSv5uC9+GJ0LE3rDZGilG6IXhSJufUArMXnicIZjkjvyaCo97+B
+# OZg5AVfH21EcEqi8hpvZ6jDLzmRpt5zy6UUlagJvvf/tHCM4nu2Fp4us8/7UPyIS
+# Yvf3UopJn2C5FXu2gW32V4gbsM5bB86xyO4F+frGMznal87bCFYcgyt+GTns/ki1
+# 4HvUoTmjnL9rfN/IB2nECTQ9poNU4zyaGhgwpUGKIttZDIF7l4hSfM66Y18=
 # SIG # End signature block
