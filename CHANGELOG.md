@@ -1,5 +1,9 @@
 # Change log
 
+## 0.8.2 (July 08, 2018)
+
+- Added link to GitHub in Module Manifest description.
+
 ## 0.8.1 (July 08, 2018)
 
 - Updated README.md

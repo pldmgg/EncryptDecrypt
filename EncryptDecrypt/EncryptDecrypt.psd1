@@ -12,7 +12,7 @@
 RootModule = 'EncryptDecrypt.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.8.1'
+ModuleVersion = '0.8.2'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -30,7 +30,7 @@ CompanyName = 'pldmgg'
 Copyright = '(c) 2018 pldmgg. All rights reserved.'
 
 # Description of the functionality provided by this module
-Description = 'Create AES/RSA encrypted strings or files. Decrypt existing AES/RSA encrypted strings or files.'
+Description = 'Create AES/RSA encrypted strings or files. Decrypt existing AES/RSA encrypted strings or files. GitHub: https://github.com/pldmgg/EncryptDecrypt'
 
 # Minimum version of the Windows PowerShell engine required by this module
 PowerShellVersion = '5.1'
