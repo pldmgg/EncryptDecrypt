@@ -316,7 +316,13 @@ function New-EncryptedFile {
 
     $RegexDirectoryPath = '^(([a-zA-Z]:\\)|(\\\\))((?![.<>:"\/\\|?*]).)+((?![.<>:"\/|?*]).)+$'
     $RegexFilePath = '^(([a-zA-Z]:\\)|(\\\\))((?![.<>:"\/\\|?*]).)+((?![<>:"\/|?*]).)+((.*?\.)|(.*?\.[\w]+))+$'
-    if ($SourceType -eq "File" -and $ContentToEncrypt -notmatch $RegexFilePath) {
+    # NOTE: The below Linux Regex representations are simply commonly used naming conventions - they are not
+    # strict definitions of Linux File or Directory Path formats
+    $LinuxRegexFilePath = '^((~)|(\/[\w^ ]+))+\/?([\w.])+[^.]$'
+    $LinuxRegexDirectoryPath = '^((~)|(\/[\w^ ]+))+\/?$'
+    if ($SourceType -eq "File" -and $ContentToEncrypt -notmatch $RegexFilePath -and
+    $ContentToDecrypt -notmatch $LinuxRegexFilePath
+    ) {
         $ErrMsg = "The -SourceType specified was 'File' but '$ContentToEncrypt' does not appear to " +
         "be a valid file path. This is either because a full path was not provided or because the file does " +
         "not have a file extenstion. Please correct and try again. Halting!"
@@ -324,7 +330,9 @@ function New-EncryptedFile {
         $global:FunctionResult = "1"
         return
     }
-    if ($SourceType -eq "Directory" -and $ContentToEncrypt -notmatch $RegexDirectoryPath) {
+    if ($SourceType -eq "Directory" -and $ContentToEncrypt -notmatch $RegexDirectoryPath -and
+    $ContentToDecrypt -notmatch $LinuxRegexDirectoryPath
+    ) {
         $ErrMsg = "The -SourceType specified was 'Directory' but '$ContentToEncrypt' does not appear to be " +
         "a valid directory path. This is either because a full path was not provided or because the directory " +
         "name ends with something that appears to be a file extension. Please correct and try again. Halting!"
@@ -624,12 +632,15 @@ function New-EncryptedFile {
         }
 
         #$EncryptedBytes1 = $Cert1.PublicKey.Key.Encrypt($EncodedBytes1, $true)
+        <#
         try {
             $EncryptedBytes1 = $Cert1.PublicKey.Key.Encrypt($EncodedBytes1, [System.Security.Cryptography.RSAEncryptionPadding]::OaepSHA256)
         }
         catch {
             $EncryptedBytes1 = $Cert1.PublicKey.Key.Encrypt($EncodedBytes1, [System.Security.Cryptography.RSAEncryptionPadding]::Pkcs1)
         }
+        #>
+        $EncryptedBytes1 = $Cert1.PublicKey.Key.Encrypt($EncodedBytes1, [System.Security.Cryptography.RSAEncryptionPadding]::Pkcs1)
         $EncryptedString1 = [System.Convert]::ToBase64String($EncryptedBytes1)
         $EncryptedString1 | Out-File "$FileToOutput.rsaencrypted"
 
@@ -667,13 +678,15 @@ function New-EncryptedFile {
             }
 
             #$EncryptedBytes1 = $Cert1.PublicKey.Key.Encrypt($EncodedBytes1, $true)
+            <#
             try {
                 $EncryptedBytes1 = $Cert1.PublicKey.Key.Encrypt($EncodedBytes1, [System.Security.Cryptography.RSAEncryptionPadding]::OaepSHA256)
             }
             catch {
                 $EncryptedBytes1 = $Cert1.PublicKey.Key.Encrypt($EncodedBytes1, [System.Security.Cryptography.RSAEncryptionPadding]::Pkcs1)
             }
-
+            #>
+            $EncryptedBytes1 = $Cert1.PublicKey.Key.Encrypt($EncodedBytes1, [System.Security.Cryptography.RSAEncryptionPadding]::Pkcs1)
             $EncryptedString1 = [System.Convert]::ToBase64String($EncryptedBytes1)
             $FileOutputPathSplit = $FileToOutput -split "\."
             $FileToOutputUpdated = $FileOutputPathSplit[0] + "_$i." + $FileOutputPathSplit[-1] + ".rsaencrypted"
@@ -717,12 +730,15 @@ function New-EncryptedFile {
         # If the file content is small enough, encrypt via RSA
         if ($EncodedBytes1.Length -lt $MaxNumberOfBytesThatCanBeEncryptedViaRSA) {
             #$EncryptedBytes1 = $Cert1.PublicKey.Key.Encrypt($EncodedBytes1, $true)
+            <#
             try {
                 $EncryptedBytes1 = $Cert1.PublicKey.Key.Encrypt($EncodedBytes1, [System.Security.Cryptography.RSAEncryptionPadding]::OaepSHA256)
             }
             catch {
                 $EncryptedBytes1 = $Cert1.PublicKey.Key.Encrypt($EncodedBytes1, [System.Security.Cryptography.RSAEncryptionPadding]::Pkcs1)
             }
+            #>
+            $EncryptedBytes1 = $Cert1.PublicKey.Key.Encrypt($EncodedBytes1, [System.Security.Cryptography.RSAEncryptionPadding]::Pkcs1)
             $EncryptedString1 = [System.Convert]::ToBase64String($EncryptedBytes1)
             $EncryptedString1 | Out-File "$OriginalDirectory\$OriginalFileName.rsaencrypted"
         }
@@ -747,12 +763,15 @@ function New-EncryptedFile {
             #$EncodedBytes1 = Get-Content "$AESKeyDir\$AESKeyFileNameSansExt.aeskey" -Encoding Byte -ReadCount 0
             $EncodedBytes1 = [System.IO.File]::ReadAllBytes("$AESKeyDir\$AESKeyFileNameSansExt.aeskey")
             #$EncryptedBytes1 = $Cert1.PublicKey.Key.Encrypt($EncodedBytes1, $true)
+            <#
             try {
                 $EncryptedBytes1 = $Cert1.PublicKey.Key.Encrypt($EncodedBytes1, [System.Security.Cryptography.RSAEncryptionPadding]::OaepSHA256)
             }
             catch {
                 $EncryptedBytes1 = $Cert1.PublicKey.Key.Encrypt($EncodedBytes1, [System.Security.Cryptography.RSAEncryptionPadding]::Pkcs1)
             }
+            #>
+            $EncryptedBytes1 = $Cert1.PublicKey.Key.Encrypt($EncodedBytes1, [System.Security.Cryptography.RSAEncryptionPadding]::Pkcs1)
             $EncryptedString1 = [System.Convert]::ToBase64String($EncryptedBytes1)
             $EncryptedString1 | Out-File "$AESKeyDir\$AESKeyFileNameSansExt.aeskey.rsaencrypted"
             Remove-Item "$AESKeyDir\$AESKeyFileNameSansExt.aeskey"
@@ -837,12 +856,15 @@ function New-EncryptedFile {
             #$EncodedBytes1 = Get-Content $file -Encoding Byte -ReadCount 0
             $EncodedBytes1 = [System.IO.File]::ReadAllBytes($file)
             #$EncryptedBytes1 = $Cert1.PublicKey.Key.Encrypt($EncodedBytes1, $true)
+            <#
             try {
                 $EncryptedBytes1 = $Cert1.PublicKey.Key.Encrypt($EncodedBytes1, [System.Security.Cryptography.RSAEncryptionPadding]::OaepSHA256)
             }
             catch {
                 $EncryptedBytes1 = $Cert1.PublicKey.Key.Encrypt($EncodedBytes1, [System.Security.Cryptography.RSAEncryptionPadding]::Pkcs1)
             }
+            #>
+            $EncryptedBytes1 = $Cert1.PublicKey.Key.Encrypt($EncodedBytes1, [System.Security.Cryptography.RSAEncryptionPadding]::Pkcs1)
             $EncryptedString1 = [System.Convert]::ToBase64String($EncryptedBytes1)
             $EncryptedString1 | Out-File "$file.rsaencrypted"
         }
@@ -862,12 +884,15 @@ function New-EncryptedFile {
         #$EncodedBytes1 = Get-Content "$AESKeyDir\$AESKeyFileName" -Encoding Byte -ReadCount 0
         $EncodedBytes1 = [System.IO.File]::ReadAllBytes("$AESKeyDir\$AESKeyFileName")
         #$EncryptedBytes1 = $Cert1.PublicKey.Key.Encrypt($EncodedBytes1, $true)
+        <#
         try {
             $EncryptedBytes1 = $Cert1.PublicKey.Key.Encrypt($EncodedBytes1, [System.Security.Cryptography.RSAEncryptionPadding]::OaepSHA256)
         }
         catch {
             $EncryptedBytes1 = $Cert1.PublicKey.Key.Encrypt($EncodedBytes1, [System.Security.Cryptography.RSAEncryptionPadding]::Pkcs1)
         }
+        #>
+        $EncryptedBytes1 = $Cert1.PublicKey.Key.Encrypt($EncodedBytes1, [System.Security.Cryptography.RSAEncryptionPadding]::Pkcs1)
         $EncryptedString1 = [System.Convert]::ToBase64String($EncryptedBytes1)
         $EncryptedString1 | Out-File "$AESKeyDir\$AESKeyFileName.rsaencrypted"
         Remove-Item "$AESKeyDir\$AESKeyFileName"
@@ -932,8 +957,8 @@ function New-EncryptedFile {
 # SIG # Begin signature block
 # MIIMiAYJKoZIhvcNAQcCoIIMeTCCDHUCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUaDtPB4ISrF91Tc3h+nq/a7qn
-# tMmgggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQU2vz6NOhqQssrGPqKOUZ0mvC+
+# 7+egggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
 # 9w0BAQsFADAwMQwwCgYDVQQGEwNMQUIxDTALBgNVBAoTBFpFUk8xETAPBgNVBAMT
 # CFplcm9EQzAxMB4XDTE3MDkyMDIxMDM1OFoXDTE5MDkyMDIxMTM1OFowPTETMBEG
 # CgmSJomT8ixkARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMT
@@ -990,11 +1015,11 @@ function New-EncryptedFile {
 # ARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMTB1plcm9TQ0EC
 # E1gAAAH5oOvjAv3166MAAQAAAfkwCQYFKw4DAhoFAKB4MBgGCisGAQQBgjcCAQwx
 # CjAIoAKAAKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcCAQQwHAYKKwYBBAGC
-# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFAPRCwqOdIvyIFIb
-# Io6dot4rUiL3MA0GCSqGSIb3DQEBAQUABIIBAGP6ZDLErmz6RxnFliw7SaVq0eRy
-# 3uIZ44S+Tha5sRjAhvxgcU69HC0DZWtnEpVfotfLvaigET/fa/Y9htRNEAnzUJbg
-# H2ui75H9PygyY+NhMqQekN3Fj9WqmQKKBGNVkPjkK9rMdbY4gQwHchvU5AzAxFdB
-# SkdPLA6GucLGn65icTZa5SeDOoj9pyhY5ywBdlVr23DwveEIXLkp3ozoMTtKHy6n
-# HlEH9/HaOTkT4NcoNgd0jrfo6aaskBEd7d9WDeQKLI2PSzUk405B4R1PEHjn0B55
-# +zYKfL+B6vqIU/a/vvi/RbtN2bPPP6b5gkbizubS7rzTNhNZEd9jSdaxv5o=
+# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFFEsTUr2zEop5MHJ
+# FCq8Pzzh8rRYMA0GCSqGSIb3DQEBAQUABIIBAMNh7O4VHXtoudjKom+qLrOve6En
+# TS1PUlukuZPn9rZQ+ENxIRyjI0oCXEUUDX8RgwFLdFWPMy2ZtjZfXtOLLKkDzuJd
+# qTBh2LjJXYAtDsvYewV2hMldqxvy/fKgO/nVcD960HaYvTc35kb2AHEaLZZZZr8e
+# MuqfQRm7Qqt3IVlPw+VBSCvf30VQ4PR4gz2yOEFgGnZwSiVlpbryFcCVOVr9D94Y
+# hgg2FIeI6xzEmP1tPAXF9sZgYO6apQdtDIAi9k+hugpdBqhiNcsHVb/cQtSLJUXC
+# YkRrlskqUIylpNLe0iFAWNTHGpT7MlnKfHRHe5/oq+NAbHeUBYB1q8fxpg4=
 # SIG # End signature block

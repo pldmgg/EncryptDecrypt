@@ -360,7 +360,13 @@ function Get-DecryptedContent {
 
     $RegexDirectoryPath = '^(([a-zA-Z]:\\)|(\\\\))((?![.<>:"\/\\|?*]).)+((?![.<>:"\/|?*]).)+$'
     $RegexFilePath = '^(([a-zA-Z]:\\)|(\\\\))((?![.<>:"\/\\|?*]).)+((?![<>:"\/|?*]).)+((.*?\.)|(.*?\.[\w]+))+$'
-    if ($SourceType -eq "File" -and $ContentToDecrypt -notmatch $RegexFilePath) {
+    # NOTE: The below Linux Regex representations are simply commonly used naming conventions - they are not
+    # strict definitions of Linux File or Directory Path formats
+    $LinuxRegexFilePath = '^((~)|(\/[\w^ ]+))+\/?([\w.])+[^.]$'
+    $LinuxRegexDirectoryPath = '^((~)|(\/[\w^ ]+))+\/?$'
+    if ($SourceType -eq "File" -and $ContentToDecrypt -notmatch $RegexFilePath -and
+    $ContentToDecrypt -notmatch $LinuxRegexFilePath
+    ) {
         $ErrMsg = "The -SourceType specified was 'File' but '$ContentToDecrypt' does not appear to " +
         "be a valid file path. This is either because a full path was not provided or because the file does " +
         "not have a file extenstion. Please correct and try again. Halting!"
@@ -368,7 +374,9 @@ function Get-DecryptedContent {
         $global:FunctionResult = "1"
         return
     }
-    if ($SourceType -eq "Directory" -and $ContentToDecrypt -notmatch $RegexDirectoryPath) {
+    if ($SourceType -eq "Directory" -and $ContentToDecrypt -notmatch $RegexDirectoryPath -and
+    $ContentToDecrypt -notmatch $LinuxRegexDirectoryPath
+    ) {
         $ErrMsg = "The -SourceType specified was 'Directory' but '$ContentToDecrypt' does not appear to be " +
         "a valid directory path. This is either because a full path was not provided or because the directory " +
         "name ends with something that appears to be a file extension. Please correct and try again. Halting!"
@@ -929,8 +937,8 @@ function Get-DecryptedContent {
 # SIG # Begin signature block
 # MIIMiAYJKoZIhvcNAQcCoIIMeTCCDHUCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUDCJoKYhLRE/6MkCSLU/A7ysk
-# YPGgggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUmP9Dx2hmCT5RzivLExaJpOC6
+# L9Ggggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
 # 9w0BAQsFADAwMQwwCgYDVQQGEwNMQUIxDTALBgNVBAoTBFpFUk8xETAPBgNVBAMT
 # CFplcm9EQzAxMB4XDTE3MDkyMDIxMDM1OFoXDTE5MDkyMDIxMTM1OFowPTETMBEG
 # CgmSJomT8ixkARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMT
@@ -987,11 +995,11 @@ function Get-DecryptedContent {
 # ARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMTB1plcm9TQ0EC
 # E1gAAAH5oOvjAv3166MAAQAAAfkwCQYFKw4DAhoFAKB4MBgGCisGAQQBgjcCAQwx
 # CjAIoAKAAKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcCAQQwHAYKKwYBBAGC
-# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFGdnAt6NtUmqLITy
-# Q/zcggopj8+FMA0GCSqGSIb3DQEBAQUABIIBAEpCn6TwR+NPOTaFe0lWz5p8EDES
-# fYpkCunyYyNpfdFdFsuYU3ZiBtbQFUwGx+E9PcdbpBqTVRzpRh1KBxugIkbt3u5M
-# eDFauNP59Id3CVX76tuh8vrzVwtGfzKVEXWDVJTi6yR6sOGTXt5SDen8Gax2yb4S
-# gawvXXXzu7Rf2JCVz0HsBufTLdtRNPfJNTPypXrDpksyHhLZH3claJcOe0bx7lHY
-# tgMOMeR842SaqAY/JzqKQ79qTYILX8rZ4pficu0PE732pfF4rQySZGKiPEufLtqd
-# 73/wrQQgE44IkwYvnAEHRrRf3a/mmvDo4Ryub0MhwT8zsAOO+6QDtBrmhHw=
+# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFNCXYB0B2ij74Evq
+# WrznS01z4WPpMA0GCSqGSIb3DQEBAQUABIIBAGYI49SJWcCtyvDjGcVcQ13gyfi/
+# /SLqJp+JCq3QFx7Bc2LaLSCKp8/moKeJw2ZwjlmXj+9EBQipKGCxbHrV+dA03vKV
+# n6HP32lYxW47CKk7+cYbCacP6GA4q7ikJuoEh1NHsPl8aE7OhCeHd1tzpn5ATbDV
+# L7yzy2ERH0EIwoaMeoYQMjUMTVjtn+0yUDwlqTI2xW1nWlfrDocVcM5J7bTB/rN4
+# SeebyFGlo+igqNxiYJIQsA6s+O0Id2CwyLHXqB/clux/fMO8ummIlY4bhrBjs2QJ
+# 6ppEuCUp8mNQEvFyO3v+5GUxH5X6CMjuxG7ArC2gH1GFeSpev1Fuu5uMy2k=
 # SIG # End signature block
