@@ -67,21 +67,11 @@ Function DecryptFile {
         Return
     }
 
-    Write-Verbose "Encryping $($FileToDecrypt.Count) File(s) with the $KeySize-bit key $Key"
-
     #Used to store successfully decrypted file names.
     $DecryptedFiles = @()
     $FailedToDecryptFiles = @()
 
     foreach ($File in $FileToDecrypt) {
-        #Verify filename
-        <#
-        if(-not $File.Name.EndsWith($Suffix)) {
-            Write-Error "$($File.FullName) does not have an extension of '$Suffix'."
-            Continue
-        }
-        #>
-
         #Open file to decrypt
         try {
             $FileStreamReader = New-Object System.IO.FileStream($File.FullName, [System.IO.FileMode]::Open)
@@ -97,10 +87,10 @@ Function DecryptFile {
             $FileStreamWriter = New-Object System.IO.FileStream($DestinationFile, [System.IO.FileMode]::Create)
         }
         catch {
-            Write-Error "Unable to open $DestinationFile for writing."
             $FileStreamReader.Close()
             $FileStreamWriter.Close()
             Remove-Item $DestinationFile -Force
+            Write-Error "Unable to open $DestinationFile for writing."
             Continue
         }
 
@@ -116,11 +106,11 @@ Function DecryptFile {
             $AESProvider.IV = $IV
         }
         catch {
-            Write-Warning "Unable to read IV from $($File.FullName), verify this file was made using the included EncryptFile function."
             $FileStreamReader.Close()
             $FileStreamWriter.Close()
             Remove-Item $DestinationFile -Force
             $FailedToDecryptFiles += $File
+            Write-Error "Unable to read IV from $($File.FullName), verify this file was made using the included EncryptFile function."
             Continue
         }
 
@@ -171,8 +161,8 @@ Function DecryptFile {
 # SIG # Begin signature block
 # MIIMiAYJKoZIhvcNAQcCoIIMeTCCDHUCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUlWUtoFzNdcEte5MKIUnt8fl8
-# awmgggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQU9QoicPkQAudjgqzV3CXkcL0S
+# 9FKgggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
 # 9w0BAQsFADAwMQwwCgYDVQQGEwNMQUIxDTALBgNVBAoTBFpFUk8xETAPBgNVBAMT
 # CFplcm9EQzAxMB4XDTE3MDkyMDIxMDM1OFoXDTE5MDkyMDIxMTM1OFowPTETMBEG
 # CgmSJomT8ixkARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMT
@@ -229,11 +219,11 @@ Function DecryptFile {
 # ARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMTB1plcm9TQ0EC
 # E1gAAAH5oOvjAv3166MAAQAAAfkwCQYFKw4DAhoFAKB4MBgGCisGAQQBgjcCAQwx
 # CjAIoAKAAKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcCAQQwHAYKKwYBBAGC
-# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFAnOggYmEkjE3gg/
-# mnwu3yQYZ/eHMA0GCSqGSIb3DQEBAQUABIIBABObwfEF5xUBv5ihlMiEeTZFxbCY
-# mqspqpU85q5kSLPS1VFkZSUFSGDqlXd3KlBelWjKe0JLKpTekyAbweWVaUbNeXAE
-# ceY2w7btXBKL8tcGRPJJMHLZ8QeShqqQ9JjadX+DFXCsuuhAZfSVM5Bzo8/skmsr
-# q0sOeEZkhvZkrJ1WgGh0+5rxdb/dXB7LzWLrX0jsRaBXsWz5ftdxEKr1emaYMTV+
-# Tz4RX3mgH8am41yNM7SuuTcw24/MYKb8I1cKrGJH1RxK9KlFtpnZyYTArqcn0BWw
-# 1pbHv67pBxR2JXyuu7++W3w4Erq05bBQu5STqipPi2Xd7tDxAQ8q7h8QX+Y=
+# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFF2D2xIGN2kj2Ooy
+# SgauaqIyXmgBMA0GCSqGSIb3DQEBAQUABIIBAGsD3MRxvlwei2RYzbnNiGIEenD2
+# bOC4ObeQJ3JxxAlbxpMB9yA4rrWE+U4ECyIzMsQMCr7vOP4eD3i2awaqAPtT8ZaS
+# 2fDQc1iN1dt3guYYajr57LLSSgrFmp+ioB3OqrbZQZmJiyn/lJyplo0bnkAC784c
+# N75A+QxfqFN9B5pghZag5bzher4xgNhWHt6WKDQdPLtL9HjXJQsCPi6sWhS1zYHl
+# b6X7gB8myBJqn+aFU66dKvanGD44rF2KBk4/k4SI3A1n2xy1c2ocsRsaehSKS2oF
+# M4crCILcLkGkHDqMf8FMRjB7l8uPKIo4DCN0w3Nrh/ALdrK+CAk4L9NQvr8=
 # SIG # End signature block

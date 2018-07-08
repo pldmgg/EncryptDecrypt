@@ -105,6 +105,12 @@
 
         Use this parameter if the certificate is password protected.
 
+    .PARAMETER RemoveOriginalFile
+        Optional.
+
+        This parameter is a switch. By default, original unencrypted files are not touched. Use this switch to remove
+        the original unencrypted files.
+
     .EXAMPLE
         # String Encryption Example
         # NOTE: If neither -PathToPfxFile nor -CNOfCertInStore parameters are used, a NEW Self-Signed Certificate is
@@ -277,7 +283,10 @@ function New-EncryptedFile {
         [string]$CNOfNewCert,
 
         [Parameter(Mandatory=$False)]
-        [securestring]$CertPwd
+        [securestring]$CertPwd,
+
+        [Parameter(Mandatory=$False)]
+        [switch]$RemoveOriginalFile
     )
 
     ##### BEGIN Parameter Validation #####
@@ -296,6 +305,11 @@ function New-EncryptedFile {
     if ($Recurse -and $SourceType -ne "Directory") {
         Write-Verbose "The -Recurse switch should only be used when -SourceType is 'Directory'! Halting!"
         Write-Error "The -Recurse switch should only be used when -SourceType is 'Directory'! Halting!"
+        $global:FunctionResult = "1"
+        return
+    }
+    if ($RemoveOriginalFile -and $SourceType -notmatch "File|Directory") {
+        Write-Error "The -RemoveOriginalFile parameter should only be used when -SourceType is 'File' or 'Directory'! Halting!"
         $global:FunctionResult = "1"
         return
     }
@@ -466,10 +480,20 @@ function New-EncryptedFile {
                     $PfxOutputDir = $FileToOutput | Split-Path -Parent
                 }
                 if (!$FileToOutput -and $SourceType -eq "File") {
-                    $PfxOutputDir = $ContentToEncrypt | Split-Path -Parent
+                    if ($ContentToEncrypt.GetType().FullName -eq "System.String[]") {
+                        $PfxOutputDir = $ContentToEncrypt[0] | Split-Path -Parent
+                    }
+                    else {
+                        $PfxOutputDir = $ContentToEncrypt | Split-Path -Parent
+                    }
                 }
                 if (!$FileToOutput -and $SourceType -eq "Directory") {
-                    $PfxOutputDir = $ContentToEncrypt
+                    if ($ContentToEncrypt.GetType().FullName -eq "System.String[]") {
+                        $PfxOutputDir = $ContentToEncrypt[0]
+                    }
+                    else {
+                        $PfxOutputDir = $ContentToEncrypt
+                    }
                 }
 
                 $Cert1Prep = Get-EncryptionCert -CommonName $CNOfNewCert -ExportDirectory $PfxOutputDir
@@ -485,10 +509,20 @@ function New-EncryptedFile {
                 $PfxOutputDir = $FileToOutput | Split-Path -Parent
             }
             if (!$FileToOutput -and $SourceType -eq "File") {
-                $PfxOutputDir = $ContentToEncrypt | Split-Path -Parent
+                if ($ContentToEncrypt.GetType().FullName -eq "System.String[]") {
+                    $PfxOutputDir = $ContentToEncrypt[0] | Split-Path -Parent
+                }
+                else {
+                    $PfxOutputDir = $ContentToEncrypt | Split-Path -Parent
+                }
             }
             if (!$FileToOutput -and $SourceType -eq "Directory") {
-                $PfxOutputDir = $ContentToEncrypt
+                if ($ContentToEncrypt.GetType().FullName -eq "System.String[]") {
+                    $PfxOutputDir = $ContentToEncrypt[0]
+                }
+                else {
+                    $PfxOutputDir = $ContentToEncrypt
+                }
             }
 
             $Cert1Prep = Get-EncryptionCert -CommonName $CNOfNewCert -ExportDirectory $PfxOutputDir
@@ -507,11 +541,22 @@ function New-EncryptedFile {
                 $PfxOutputDir = $FileToOutput | Split-Path -Parent
             }
             if (!$FileToOutput -and $SourceType -eq "File") {
-                $PfxOutputDir = $ContentToEncrypt | Split-Path -Parent
+                if ($ContentToEncrypt.GetType().FullName -eq "System.String[]") {
+                    $PfxOutputDir = $ContentToEncrypt[0] | Split-Path -Parent
+                }
+                else {
+                    $PfxOutputDir = $ContentToEncrypt | Split-Path -Parent
+                }
             }
             if (!$FileToOutput -and $SourceType -eq "Directory") {
-                $PfxOutputDir = $ContentToEncrypt
+                if ($ContentToEncrypt.GetType().FullName -eq "System.String[]") {
+                    $PfxOutputDir = $ContentToEncrypt[0]
+                }
+                else {
+                    $PfxOutputDir = $ContentToEncrypt
+                }
             }
+            
             $pfxbytes = $Cert1.Export([System.Security.Cryptography.X509Certificates.X509ContentType]::Pfx)
             [System.IO.File]::WriteAllBytes("$PfxOutputDir\$CertName.pfx", $pfxbytes)
         }
@@ -665,7 +710,6 @@ function New-EncryptedFile {
         $OriginalFileName = $OriginalFileItem.Name
         $OriginalDirectory = $OriginalFileItem.Directory
 
-
         # Determine if the contents of the File is too long for Asymetric RSA Encryption with pub cert and priv key
         #$EncodedBytes1 = Get-Content $ContentToEncrypt -Encoding Byte -ReadCount 0
         $EncodedBytes1 = [System.IO.File]::ReadAllBytes($ContentToEncrypt)
@@ -735,11 +779,23 @@ function New-EncryptedFile {
         elseif ($ExportPfxCertificateSuccessful) {
             $("Cert:\LocalMachine\My" + '\' + $Cert1.Thumbprint),"$PfxOutputDir\$CertName.pfx"
         }
+        
+        $RenameItemSplatParams = @{
+            Path        = "$OriginalFile.original"
+            NewName     = $OriginalFile
+            PassThru    = $True
+            ErrorAction = "SilentlyContinue"
+        }
+        $FinalOriginalFileItem = Rename-Item @RenameItemSplatParams
+        if ($RemoveOriginalFile) {
+            Remove-Item -Path $FinalOriginalFileItem.FullName -Force -ErrorAction SilentlyContinue
+        }
+        
 
         [pscustomobject]@{
             FileEncryptedViaRSA                 = $FileEncryptedViaRSA
             FileEncryptedViaAES                 = $FileEncryptedViaAES
-            OriginalFile                        = "$OriginalFile.original"
+            OriginalFile                        = $FinalOriginalFileItem.FullName
             CertficateUsedForRSAEncryption      = $Cert1
             LocationOfCertUsedForRSAEncryption  = $CertLocation
             UnprotectedAESKey                   = $(if ($AESKey) {$FileEncryptionInfo.AESKey})
@@ -750,10 +806,10 @@ function New-EncryptedFile {
     }
     if ($SourceType -eq "Directory") {
         if (!$Recurse) {
-            $FilesToEncryptPrep = $(Get-ChildItem $ContentToEncrypt | Where-Object {$_.PSIsContainer -eq $false}).FullName
+            $FilesToEncryptPrep = $(Get-ChildItem -Path $ContentToEncrypt -File).FullName
         }
         if ($Recurse) {
-            $FilesToEncryptPrep = $(Get-ChildItem -Recurse $ContentToEncrypt | Where-Object {$_.PSIsContainer -eq $false}).FullName
+            $FilesToEncryptPrep = $(Get-ChildItem -Path $ContentToEncrypt -Recurse -File).FullName
         }
         
         [array]$FilesToEncryptViaRSA = @()
@@ -788,7 +844,7 @@ function New-EncryptedFile {
                 $EncryptedBytes1 = $Cert1.PublicKey.Key.Encrypt($EncodedBytes1, [System.Security.Cryptography.RSAEncryptionPadding]::Pkcs1)
             }
             $EncryptedString1 = [System.Convert]::ToBase64String($EncryptedBytes1)
-            $EncryptedString1 | Out-File "$($(Get-ChildItem $file).BaseName).rsaencrypted"
+            $EncryptedString1 | Out-File "$file.rsaencrypted"
         }
 
         $AESKeyDir = $ContentToEncrypt
@@ -842,10 +898,25 @@ function New-EncryptedFile {
             $("Cert:\LocalMachine\My" + '\' + $Cert1.Thumbprint),"$PfxOutputDir\$CertName.pfx"
         }
 
-        [pscustomobject][ordered]@{
+        [System.Collections.ArrayList]$FinalOriginalFileItems = @()
+        foreach ($FullFilePath in $OriginalFiles) {
+            $RenameItemSplatParams = @{
+                Path        = $FullFilePath
+                NewName     = $($FullFilePath -replace "\.original","")
+                PassThru    = $True
+                ErrorAction = "SilentlyContinue"
+            }
+            $FinalOriginalFileItem = Rename-Item @RenameItemSplatParams
+            $null = $FinalOriginalFileItems.Add($FinalOriginalFileItem)
+            if ($RemoveOriginalFile) {
+                Remove-Item -Path $FullFilePath -Force -ErrorAction SilentlyContinue
+            }
+        }
+
+        [pscustomobject]@{
             FilesEncryptedViaRSA                = $RSAEncryptedFileNames
             FilesEncryptedViaAES                = $AESEncryptedFileNames
-            OriginalFiles                       = $OriginalFiles
+            OriginalFiles                       = $FinalOriginalFileItems.FullName
             CertficateUsedForRSAEncryption      = $Cert1
             LocationOfCertUsedForRSAEncryption  = $CertLocation
             UnprotectedAESKey                   = $FileEncryptionInfo.AESKey
@@ -861,8 +932,8 @@ function New-EncryptedFile {
 # SIG # Begin signature block
 # MIIMiAYJKoZIhvcNAQcCoIIMeTCCDHUCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUWsZ52J6j+ujEY1h/M9DeqCgB
-# afmgggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUaDtPB4ISrF91Tc3h+nq/a7qn
+# tMmgggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
 # 9w0BAQsFADAwMQwwCgYDVQQGEwNMQUIxDTALBgNVBAoTBFpFUk8xETAPBgNVBAMT
 # CFplcm9EQzAxMB4XDTE3MDkyMDIxMDM1OFoXDTE5MDkyMDIxMTM1OFowPTETMBEG
 # CgmSJomT8ixkARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMT
@@ -919,11 +990,11 @@ function New-EncryptedFile {
 # ARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMTB1plcm9TQ0EC
 # E1gAAAH5oOvjAv3166MAAQAAAfkwCQYFKw4DAhoFAKB4MBgGCisGAQQBgjcCAQwx
 # CjAIoAKAAKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcCAQQwHAYKKwYBBAGC
-# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFDeqiQMjxtnOUD2Y
-# FkhcNxaja+zIMA0GCSqGSIb3DQEBAQUABIIBADEDHZ6FwvRA1OfY46jhrWcqy8y/
-# DXmtIRJxyX1LEHhAkSVkn/S8urFJLAfDLyeUdZnMU+FLIPqsV/2L42Y4VuC2gtBV
-# DF7hENLcuHBYCCL/2D/TZ8/DTqrxJ7c0VMtTMo7UNQdziJSRnQbMw7cuAfgBO8EA
-# 04Zgg+qIjBy1ceOVr444RjE9r0Ozc2nz8O2NY+6+uUp+4hVv1M7aEi/6yYwLxwfo
-# nzQIjYiNjVHrOkwmttw5bqI8icE3em43inZ9UAzI/YJsn4C5Ni8MR7w2KqEnM2sk
-# IOFuYR4LwvlQ/sETC+8JZsyYedM9vk53bD/6bP/XIppckEJaNPvstexXgFg=
+# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFAPRCwqOdIvyIFIb
+# Io6dot4rUiL3MA0GCSqGSIb3DQEBAQUABIIBAGP6ZDLErmz6RxnFliw7SaVq0eRy
+# 3uIZ44S+Tha5sRjAhvxgcU69HC0DZWtnEpVfotfLvaigET/fa/Y9htRNEAnzUJbg
+# H2ui75H9PygyY+NhMqQekN3Fj9WqmQKKBGNVkPjkK9rMdbY4gQwHchvU5AzAxFdB
+# SkdPLA6GucLGn65icTZa5SeDOoj9pyhY5ywBdlVr23DwveEIXLkp3ozoMTtKHy6n
+# HlEH9/HaOTkT4NcoNgd0jrfo6aaskBEd7d9WDeQKLI2PSzUk405B4R1PEHjn0B55
+# +zYKfL+B6vqIU/a/vvi/RbtN2bPPP6b5gkbizubS7rzTNhNZEd9jSdaxv5o=
 # SIG # End signature block

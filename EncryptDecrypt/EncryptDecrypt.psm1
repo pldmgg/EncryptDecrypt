@@ -781,7 +781,10 @@ function Get-DecryptedContent {
         [string]$AESKeyLocation,
 
         [Parameter(Mandatory=$False)]
-        [switch]$NoFileOutput
+        [switch]$NoFileOutput,
+
+        [Parameter(Mandatory=$False)]
+        [switch]$TryRSADecryption
     )
 
     ##### BEGIN Parameter Validation #####
@@ -987,7 +990,7 @@ function Get-DecryptedContent {
     }
     if ($NeedAES) {
         if (!$AESKey -and !$AESKeyLocation) {
-            $ErrMsg = "The $($MyInvocation.MyCommand.Name) function has determined that either the -AESKey "
+            $ErrMsg = "The $($MyInvocation.MyCommand.Name) function has determined that either the -AESKey " +
             "parameter or the -AESKeyLocation parameter is needed in order to decrypt the specified content! Halting!"
             Write-Error $ErrMsg
             $global:FunctionResult = "1"
@@ -1041,9 +1044,9 @@ function Get-DecryptedContent {
 
                 # Need to write $DecryptedContent2 to tempfile to strip BOM if present
                 $tmpFile = [IO.Path]::GetTempFileName()
-                [System.IO.File]::WriteAllLines($tmpFile, $DecryptedContent2.Trim())
+                $null = [System.IO.File]::WriteAllLines($tmpFile, $DecryptedContent2.Trim())
                 $AESKey = Get-Content $tmpFile
-                Remove-Item $tmpFile -Force
+                $null = Remove-Item $tmpFile -Force
             }
             # If the $AESKeyLocation file extension is not .rsaencrypted, assume it's the unprotected AESKey
             if ($(Get-ChildItem $AESKeyLocation).Extension -ne ".rsaencrypted"){
@@ -1058,10 +1061,9 @@ function Get-DecryptedContent {
 
     [System.Collections.ArrayList]$DecryptedFiles = @()
     [System.Collections.ArrayList]$FailedToDecryptFiles = @()
-    [System.Collections.ArrayList]$TryRSADecryption = @()
     # Do RSA Decryption on $ContentToDecrypt
-    if ($TypeOfEncryptionUsed -eq "RSA"-or !$NeedAES) {
-        Write-Host "Doing RSA Decryption"
+    if ($TypeOfEncryptionUsed -eq "RSA" -or !$NeedAES -or $TryRSADecryption) {
+        #Write-Host "Doing RSA Decryption"
         if ($SourceType -eq "String" -or $SourceType -eq "File") {
             if ($SourceType -eq "String") {
                 $EncryptedString2 = $ContentToDecrypt
@@ -1095,9 +1097,13 @@ function Get-DecryptedContent {
                 $DecryptedContent2 = [system.text.encoding]::UTF8.GetString($DecryptedBytes2)
                 $DecryptedContent2 = $DecryptedContent2.Trim()
                 # Need to write $DecryptedContent2 using [System.IO.File]::WriteAllLines() to strip BOM if present
-                [System.IO.File]::WriteAllLines("$OutputFile", $DecryptedContent2)
+                $null = [System.IO.File]::WriteAllLines("$OutputFile", $DecryptedContent2)
 
                 $null = $DecryptedFiles.Add($OutputFile)
+
+                if ($SourceType -eq "File") {
+                    $null = Remove-Item $ContentToDecrypt -Force -ErrorAction SilentlyContinue
+                }
             }
             catch {
                 try {
@@ -1113,9 +1119,13 @@ function Get-DecryptedContent {
                     $DecryptedContent2 = [system.text.encoding]::UTF8.GetString($DecryptedBytes2)
                     $DecryptedContent2 = $DecryptedContent2.Trim()
                     # Need to write $DecryptedContent2 using [System.IO.File]::WriteAllLines() to strip BOM if present
-                    [System.IO.File]::WriteAllLines("$OutputFile", $DecryptedContent2)
+                    $null = [System.IO.File]::WriteAllLines("$OutputFile", $DecryptedContent2)
 
                     $null = $DecryptedFiles.Add($OutputFile)
+
+                    if ($SourceType -eq "File") {
+                        $null = Remove-Item $ContentToDecrypt -Force -ErrorAction SilentlyContinue
+                    }
                 }
                 catch {
                     #Write-Error $_
@@ -1147,7 +1157,7 @@ function Get-DecryptedContent {
                     $DecryptedContent2 = [system.text.encoding]::UTF8.GetString($DecryptedBytes2)
                     $DecryptedContent2 = $DecryptedContent2.Trim()
                     # Need to write $DecryptedContent2 using [System.IO.File]::WriteAllLines() to strip BOM if present
-                    [System.IO.File]::WriteAllLines("$OutputFile", $DecryptedContent2)
+                    $null = [System.IO.File]::WriteAllLines("$OutputFile", $DecryptedContent2)
 
                     $null = $DecryptedFiles.Add($OutputFile)
                 }
@@ -1165,7 +1175,7 @@ function Get-DecryptedContent {
                         $DecryptedContent2 = [system.text.encoding]::UTF8.GetString($DecryptedBytes2)
                         $DecryptedContent2 = $DecryptedContent2.Trim()
                         # Need to write $DecryptedContent2 using [System.IO.File]::WriteAllLines() to strip BOM if present
-                        [System.IO.File]::WriteAllLines("$OutputFile", $DecryptedContent2)
+                        $null = [System.IO.File]::WriteAllLines("$OutputFile", $DecryptedContent2)
     
                         $null = $DecryptedFiles.Add($OutputFile)
                     }
@@ -1178,73 +1188,56 @@ function Get-DecryptedContent {
         }
         if ($SourceType -eq "Directory") {
             if ($Recurse) {
-                $DecryptionCandidates = $(Get-ChildItem -Path $ContentToDecrypt -Recurse -File).FullName
+                $DecryptionCandidates = $(Get-ChildItem -Path $ContentToDecrypt -Recurse -File | Where-Object {
+                    $_.FullName -notmatch [regex]::Escape($(Get-Item $PathToPfxFile).BaseName) -and
+                    $_.FullName -notmatch "\.aeskey"
+                }).FullName
             }
             if (!$Recurse) {
-                $DecryptionCandidates = $(Get-ChildItem -Path $ContentToDecrypt -File).FullName
+                $DecryptionCandidates = $(Get-ChildItem -Path $ContentToDecrypt -File | Where-Object {
+                    $_.FullName -notmatch [regex]::Escape($(Get-Item $PathToPfxFile).BaseName) -and
+                    $_.FullName -notmatch "\.aeskey"
+                }).FullName
             }
 
             foreach ($file in $DecryptionCandidates) {
-                $EncryptedString2 = Get-Content $file
-                $OutputFile = "$file.decrypted"
-
                 try {
-                    $EncryptedBytes2 = [System.Convert]::FromBase64String($EncryptedString2)
-                    if ($PrivateKeyInfo) {
-                        #$DecryptedBytes2 = $PrivateKeyInfo.Decrypt($EncryptedBytes2, $true)
-                        $DecryptedBytes2 = $PrivateKeyInfo.Decrypt($EncryptedBytes2, [System.Security.Cryptography.RSAEncryptionPadding]::OaepSHA256)
-                    }
-                    else {
-                        #$DecryptedBytes2 = $Cert1.PrivateKey.Decrypt($EncryptedBytes2, $true)
-                        $DecryptedBytes2 = $Cert1.PrivateKey.Decrypt($EncryptedBytes2, [System.Security.Cryptography.RSAEncryptionPadding]::OaepSHA256)
-                    }
-                    $DecryptedContent2 = [system.text.encoding]::UTF8.GetString($DecryptedBytes2)
-                    $DecryptedContent2 = $DecryptedContent2.Trim()
-                    # Need to write $DecryptedContent2 using [System.IO.File]::WriteAllLines() to strip BOM if present
-                    [System.IO.File]::WriteAllLines("$OutputFile", $DecryptedContent2)
-
-                    $null = $DecryptedFiles.Add($OutputFile)
+                    $FileExtenstion = $(Get-Item $file -ErrorAction Stop).Extension
                 }
                 catch {
-                    try {
-                        $EncryptedBytes2 = [System.Convert]::FromBase64String($EncryptedString2)
-                        if ($PrivateKeyInfo) {
-                            #$DecryptedBytes2 = $PrivateKeyInfo.Decrypt($EncryptedBytes2, $true)
-                            $DecryptedBytes2 = $PrivateKeyInfo.Decrypt($EncryptedBytes2, [System.Security.Cryptography.RSAEncryptionPadding]::Pkcs1)
-                        }
-                        else {
-                            #$DecryptedBytes2 = $Cert1.PrivateKey.Decrypt($EncryptedBytes2, $true)
-                            $DecryptedBytes2 = $Cert1.PrivateKey.Decrypt($EncryptedBytes2, [System.Security.Cryptography.RSAEncryptionPadding]::Pkcs1)
-                        }
-                        $DecryptedContent2 = [system.text.encoding]::UTF8.GetString($DecryptedBytes2)
-                        $DecryptedContent2 = $DecryptedContent2.Trim()
-                        # Need to write $DecryptedContent2 using [System.IO.File]::WriteAllLines() to strip BOM if present
-                        [System.IO.File]::WriteAllLines("$OutputFile", $DecryptedContent2)
-    
+                    continue
+                }
+
+                try {
+                    $DecryptInfo = Get-DecryptedContent -SourceType File -ContentToDecrypt $file -PathToPfxFile $PathToPfxFile -ErrorAction Stop
+                    $OutputFile = $DecryptInfo.DecryptedFiles
+
+                    if ($OutputFile) {
                         $null = $DecryptedFiles.Add($OutputFile)
                     }
-                    catch {
-                        #Write-Error $_
-                        $null = $FailedToDecryptFiles.Add($OutputFile)
-                    }
+                    #$null = Remove-Item $file -Force -ErrorAction SilentlyContinue
+                }
+                catch {
+                    #Write-Error $_
+                    $null = $FailedToDecryptFiles.Add($file)
                 }
             }
         }
     }
     # Do AES Decryption on $ContentToDecrypt
     if ($TypeOfEncryptionUsed -eq "AES" -or $NeedAES) {
-        Write-Host "Doing AES Decryption"
+        #Write-Host "Doing AES Decryption"
         if ($SourceType -eq "String" -or $SourceType -eq "File") {
             if ($SourceType -eq "String") {
                 # Temporarily write the string to a file
                 $tmpFile = [IO.Path]::GetTempFileName()
                 $tmpFileRenamed = "$tmpFile.aesencrypted"
-                [System.IO.File]::WriteAllLines($tmpfileRenamed, $ContentToDecrypt)
+                $null = [System.IO.File]::WriteAllLines($tmpfileRenamed, $ContentToDecrypt)
 
                 try {
-                    $FileDecryptionInfo = DecryptFile $tmpFileRenamed -Key $AESKey
+                    $FileDecryptionInfo = DecryptFile $tmpFileRenamed -Key $AESKey -ErrorAction Stop
                     # Now we're left with a file $tmpFile containing decrypted info. Move it to $FileToOutput
-                    Move-Item -Path $tmpFile -Destination $FileToOutput
+                    $null = Move-Item -Path $tmpFile -Destination $FileToOutput
 
                     $null = $DecryptedFiles.Add($FileToOutput)
                 }
@@ -1255,8 +1248,10 @@ function Get-DecryptedContent {
             }
             if ($SourceType -eq "File") {
                 try {
-                    $FileDecryptionInfo = DecryptFile $ContentToDecrypt -Key $AESKey
+                    $FileDecryptionInfo = DecryptFile $ContentToDecrypt -Key $AESKey -ErrorAction Stop
                     $null = $DecryptedFiles.Add("$ContentToDecrypt.decrypted")
+
+                    $null = Remove-Item $ContentToDecrypt -Force -ErrorAction SilentlyContinue
                 }
                 catch {
                     #Write-Error $_
@@ -1274,10 +1269,10 @@ function Get-DecryptedContent {
                 # Temporarily write the string to a file
                 $tmpFile = [IO.Path]::GetTempFileName()
                 $tmpFileRenamed = "$tmpFile.aesencrypted"
-                [System.IO.File]::WriteAllLines($tmpfileRenamed, $ArrayOfEncryptedStrings[$i])
+                $null = [System.IO.File]::WriteAllLines($tmpfileRenamed, $ArrayOfEncryptedStrings[$i])
 
                 try {
-                    $FileDecryptionInfo = DecryptFile $tmpFileRenamed -Key $AESKey
+                    $FileDecryptionInfo = DecryptFile $tmpFileRenamed -Key $AESKey -ErrorAction Stop
                     # Now we're left with a file $tmpFile containing decrypted info. Copy it to $FileToOutput
                     Move-Item -Path $tmpFile -Destination $OutputFile
 
@@ -1291,73 +1286,38 @@ function Get-DecryptedContent {
         }
         if ($SourceType -eq "Directory") {
             if ($Recurse) {
-                $DecryptionCandidates = $(Get-ChildItem -Path $ContentToDecrypt -Recurse -File).FullName
+                $DecryptionCandidates = $(Get-ChildItem -Path $ContentToDecrypt -Recurse -File | Where-Object {
+                    $_.FullName -notmatch [regex]::Escape($(Get-Item $PathToPfxFile).BaseName) -and
+                    $_.FullName -notmatch "\.aeskey"
+                }).FullName
             }
             if (!$Recurse) {
-                $DecryptionCandidates = $(Get-ChildItem -Path $ContentToDecrypt -File).FullName
+                $DecryptionCandidates = $(Get-ChildItem -Path $ContentToDecrypt -File | Where-Object {
+                    $_.FullName -notmatch [regex]::Escape($(Get-Item $PathToPfxFile).BaseName) -and
+                    $_.FullName -notmatch "\.aeskey"
+                }).FullName
             }
 
             foreach ($file in $DecryptionCandidates) {
-                $FileExtenstion = $(Get-ChildItem $file).Extension
-                if ($FileExtension -eq ".aesencrypted" -or $TypeOfEncryptionUsed -eq "AES" -or !$TypeOfEncryptionUsed) {
-                    try {
-                        $FileDecryptionInfo = DecryptFile $file -Key $AESKey
-                        if ($($FileDecryptionInfo.FilesFailedToDecrypt).Count -gt 0) {
-                            $null = $TryRSADecryption.Add($($FileDecryptionInfo.FilesFailedToDecrypt).FullName)
-                            throw
-                        }
-
-                        $null = $DecryptedFiles.Add("$file.decrypted")
-                    }
-                    catch {
-                        $AESDecryptionFailed = $true
-                        Write-Verbose "AES Decryption of $file failed...Will try RSA Decryption..."
-                    }
-                }
-            }
-            foreach ($file in $TryRSADecryption) {
-                $EncryptedString2 = Get-Content $file
-                $OutputFile = "$file.decrypted"
-
                 try {
-                    $EncryptedBytes2 = [System.Convert]::FromBase64String($EncryptedString2)
-                    if ($PrivateKeyInfo) {
-                        #$DecryptedBytes2 = $PrivateKeyInfo.Decrypt($EncryptedBytes2, $true)
-                        $DecryptedBytes2 = $PrivateKeyInfo.Decrypt($EncryptedBytes2, [System.Security.Cryptography.RSAEncryptionPadding]::OaepSHA256)
-                    }
-                    else {
-                        #$DecryptedBytes2 = $Cert1.PrivateKey.Decrypt($EncryptedBytes2, $true)
-                        $DecryptedBytes2 = $Cert1.PrivateKey.Decrypt($EncryptedBytes2, [System.Security.Cryptography.RSAEncryptionPadding]::OaepSHA256)
-                    }
-                    $DecryptedContent2 = [system.text.encoding]::Unicode.GetString($DecryptedBytes2)
-                    $DecryptedContent2 = $DecryptedContent2.Trim()
-                    # Need to write $DecryptedContent2 using [System.IO.File]::WriteAllLines() to strip BOM if present
-                    [System.IO.File]::WriteAllLines("$OutputFile", $DecryptedContent2)
-
-                    $null = $DecryptedFiles.Add($OutputFile)
+                    $FileExtenstion = $(Get-Item $file -ErrorAction Stop).Extension
                 }
                 catch {
-                    try {
-                        $EncryptedBytes2 = [System.Convert]::FromBase64String($EncryptedString2)
-                        if ($PrivateKeyInfo) {
-                            #$DecryptedBytes2 = $PrivateKeyInfo.Decrypt($EncryptedBytes2, $true)
-                            $DecryptedBytes2 = $PrivateKeyInfo.Decrypt($EncryptedBytes2, [System.Security.Cryptography.RSAEncryptionPadding]::Pkcs1)
-                        }
-                        else {
-                            #$DecryptedBytes2 = $Cert1.PrivateKey.Decrypt($EncryptedBytes2, $true)
-                            $DecryptedBytes2 = $Cert1.PrivateKey.Decrypt($EncryptedBytes2, [System.Security.Cryptography.RSAEncryptionPadding]::Pkcs1)
-                        }
-                        $DecryptedContent2 = [system.text.encoding]::UTF8.GetString($DecryptedBytes2)
-                        $DecryptedContent2 = $DecryptedContent2.Trim()
-                        # Need to write $DecryptedContent2 using [System.IO.File]::WriteAllLines() to strip BOM if present
-                        [System.IO.File]::WriteAllLines("$OutputFile", $DecryptedContent2)
-    
+                    continue
+                }
+                
+                try {
+                    $DecryptInfo = Get-DecryptedContent -SourceType File -ContentToDecrypt $file -PathToPfxFile $PathToPfxFile -AESKey $AESKey -TryRSADecryption -ErrorAction Stop
+                    $OutputFile = $DecryptInfo.DecryptedFiles
+
+                    if ($OutputFile) {
                         $null = $DecryptedFiles.Add($OutputFile)
                     }
-                    catch {
-                        #Write-Error $_
-                        $null = $FailedToDecryptFiles.Add($OutputFile)
-                    }
+                    #$null = Remove-Item $file -Force -ErrorAction SilentlyContinue
+                }
+                catch {
+                    Write-Error $_
+                    $null = $FailedToDecryptFiles.Add($OutputFile)
                 }
             }
         }
@@ -1387,10 +1347,10 @@ function Get-DecryptedContent {
     # Cleanup
     if ($NoFileOutput) {
         foreach ($item in $DecryptedFiles) {
-            Remove-Item $item -Force
+            $null = Remove-Item $item -Force
         }
         if ($TempOutputDir) {
-            Remove-Item -Recurse $TempOutputDir -Force
+            $null = Remove-Item -Recurse $TempOutputDir -Force
         }
     }
 
@@ -1875,6 +1835,12 @@ function Get-PrivateKeyProperty {
 
         Use this parameter if the certificate is password protected.
 
+    .PARAMETER RemoveOriginalFile
+        Optional.
+
+        This parameter is a switch. By default, original unencrypted files are not touched. Use this switch to remove
+        the original unencrypted files.
+
     .EXAMPLE
         # String Encryption Example
         # NOTE: If neither -PathToPfxFile nor -CNOfCertInStore parameters are used, a NEW Self-Signed Certificate is
@@ -2047,7 +2013,10 @@ function New-EncryptedFile {
         [string]$CNOfNewCert,
 
         [Parameter(Mandatory=$False)]
-        [securestring]$CertPwd
+        [securestring]$CertPwd,
+
+        [Parameter(Mandatory=$False)]
+        [switch]$RemoveOriginalFile
     )
 
     ##### BEGIN Parameter Validation #####
@@ -2066,6 +2035,11 @@ function New-EncryptedFile {
     if ($Recurse -and $SourceType -ne "Directory") {
         Write-Verbose "The -Recurse switch should only be used when -SourceType is 'Directory'! Halting!"
         Write-Error "The -Recurse switch should only be used when -SourceType is 'Directory'! Halting!"
+        $global:FunctionResult = "1"
+        return
+    }
+    if ($RemoveOriginalFile -and $SourceType -notmatch "File|Directory") {
+        Write-Error "The -RemoveOriginalFile parameter should only be used when -SourceType is 'File' or 'Directory'! Halting!"
         $global:FunctionResult = "1"
         return
     }
@@ -2236,10 +2210,20 @@ function New-EncryptedFile {
                     $PfxOutputDir = $FileToOutput | Split-Path -Parent
                 }
                 if (!$FileToOutput -and $SourceType -eq "File") {
-                    $PfxOutputDir = $ContentToEncrypt | Split-Path -Parent
+                    if ($ContentToEncrypt.GetType().FullName -eq "System.String[]") {
+                        $PfxOutputDir = $ContentToEncrypt[0] | Split-Path -Parent
+                    }
+                    else {
+                        $PfxOutputDir = $ContentToEncrypt | Split-Path -Parent
+                    }
                 }
                 if (!$FileToOutput -and $SourceType -eq "Directory") {
-                    $PfxOutputDir = $ContentToEncrypt
+                    if ($ContentToEncrypt.GetType().FullName -eq "System.String[]") {
+                        $PfxOutputDir = $ContentToEncrypt[0]
+                    }
+                    else {
+                        $PfxOutputDir = $ContentToEncrypt
+                    }
                 }
 
                 $Cert1Prep = Get-EncryptionCert -CommonName $CNOfNewCert -ExportDirectory $PfxOutputDir
@@ -2255,10 +2239,20 @@ function New-EncryptedFile {
                 $PfxOutputDir = $FileToOutput | Split-Path -Parent
             }
             if (!$FileToOutput -and $SourceType -eq "File") {
-                $PfxOutputDir = $ContentToEncrypt | Split-Path -Parent
+                if ($ContentToEncrypt.GetType().FullName -eq "System.String[]") {
+                    $PfxOutputDir = $ContentToEncrypt[0] | Split-Path -Parent
+                }
+                else {
+                    $PfxOutputDir = $ContentToEncrypt | Split-Path -Parent
+                }
             }
             if (!$FileToOutput -and $SourceType -eq "Directory") {
-                $PfxOutputDir = $ContentToEncrypt
+                if ($ContentToEncrypt.GetType().FullName -eq "System.String[]") {
+                    $PfxOutputDir = $ContentToEncrypt[0]
+                }
+                else {
+                    $PfxOutputDir = $ContentToEncrypt
+                }
             }
 
             $Cert1Prep = Get-EncryptionCert -CommonName $CNOfNewCert -ExportDirectory $PfxOutputDir
@@ -2277,11 +2271,22 @@ function New-EncryptedFile {
                 $PfxOutputDir = $FileToOutput | Split-Path -Parent
             }
             if (!$FileToOutput -and $SourceType -eq "File") {
-                $PfxOutputDir = $ContentToEncrypt | Split-Path -Parent
+                if ($ContentToEncrypt.GetType().FullName -eq "System.String[]") {
+                    $PfxOutputDir = $ContentToEncrypt[0] | Split-Path -Parent
+                }
+                else {
+                    $PfxOutputDir = $ContentToEncrypt | Split-Path -Parent
+                }
             }
             if (!$FileToOutput -and $SourceType -eq "Directory") {
-                $PfxOutputDir = $ContentToEncrypt
+                if ($ContentToEncrypt.GetType().FullName -eq "System.String[]") {
+                    $PfxOutputDir = $ContentToEncrypt[0]
+                }
+                else {
+                    $PfxOutputDir = $ContentToEncrypt
+                }
             }
+            
             $pfxbytes = $Cert1.Export([System.Security.Cryptography.X509Certificates.X509ContentType]::Pfx)
             [System.IO.File]::WriteAllBytes("$PfxOutputDir\$CertName.pfx", $pfxbytes)
         }
@@ -2435,7 +2440,6 @@ function New-EncryptedFile {
         $OriginalFileName = $OriginalFileItem.Name
         $OriginalDirectory = $OriginalFileItem.Directory
 
-
         # Determine if the contents of the File is too long for Asymetric RSA Encryption with pub cert and priv key
         #$EncodedBytes1 = Get-Content $ContentToEncrypt -Encoding Byte -ReadCount 0
         $EncodedBytes1 = [System.IO.File]::ReadAllBytes($ContentToEncrypt)
@@ -2505,11 +2509,23 @@ function New-EncryptedFile {
         elseif ($ExportPfxCertificateSuccessful) {
             $("Cert:\LocalMachine\My" + '\' + $Cert1.Thumbprint),"$PfxOutputDir\$CertName.pfx"
         }
+        
+        $RenameItemSplatParams = @{
+            Path        = "$OriginalFile.original"
+            NewName     = $OriginalFile
+            PassThru    = $True
+            ErrorAction = "SilentlyContinue"
+        }
+        $FinalOriginalFileItem = Rename-Item @RenameItemSplatParams
+        if ($RemoveOriginalFile) {
+            Remove-Item -Path $FinalOriginalFileItem.FullName -Force -ErrorAction SilentlyContinue
+        }
+        
 
         [pscustomobject]@{
             FileEncryptedViaRSA                 = $FileEncryptedViaRSA
             FileEncryptedViaAES                 = $FileEncryptedViaAES
-            OriginalFile                        = "$OriginalFile.original"
+            OriginalFile                        = $FinalOriginalFileItem.FullName
             CertficateUsedForRSAEncryption      = $Cert1
             LocationOfCertUsedForRSAEncryption  = $CertLocation
             UnprotectedAESKey                   = $(if ($AESKey) {$FileEncryptionInfo.AESKey})
@@ -2520,10 +2536,10 @@ function New-EncryptedFile {
     }
     if ($SourceType -eq "Directory") {
         if (!$Recurse) {
-            $FilesToEncryptPrep = $(Get-ChildItem $ContentToEncrypt | Where-Object {$_.PSIsContainer -eq $false}).FullName
+            $FilesToEncryptPrep = $(Get-ChildItem -Path $ContentToEncrypt -File).FullName
         }
         if ($Recurse) {
-            $FilesToEncryptPrep = $(Get-ChildItem -Recurse $ContentToEncrypt | Where-Object {$_.PSIsContainer -eq $false}).FullName
+            $FilesToEncryptPrep = $(Get-ChildItem -Path $ContentToEncrypt -Recurse -File).FullName
         }
         
         [array]$FilesToEncryptViaRSA = @()
@@ -2558,7 +2574,7 @@ function New-EncryptedFile {
                 $EncryptedBytes1 = $Cert1.PublicKey.Key.Encrypt($EncodedBytes1, [System.Security.Cryptography.RSAEncryptionPadding]::Pkcs1)
             }
             $EncryptedString1 = [System.Convert]::ToBase64String($EncryptedBytes1)
-            $EncryptedString1 | Out-File "$($(Get-ChildItem $file).BaseName).rsaencrypted"
+            $EncryptedString1 | Out-File "$file.rsaencrypted"
         }
 
         $AESKeyDir = $ContentToEncrypt
@@ -2612,10 +2628,25 @@ function New-EncryptedFile {
             $("Cert:\LocalMachine\My" + '\' + $Cert1.Thumbprint),"$PfxOutputDir\$CertName.pfx"
         }
 
-        [pscustomobject][ordered]@{
+        [System.Collections.ArrayList]$FinalOriginalFileItems = @()
+        foreach ($FullFilePath in $OriginalFiles) {
+            $RenameItemSplatParams = @{
+                Path        = $FullFilePath
+                NewName     = $($FullFilePath -replace "\.original","")
+                PassThru    = $True
+                ErrorAction = "SilentlyContinue"
+            }
+            $FinalOriginalFileItem = Rename-Item @RenameItemSplatParams
+            $null = $FinalOriginalFileItems.Add($FinalOriginalFileItem)
+            if ($RemoveOriginalFile) {
+                Remove-Item -Path $FullFilePath -Force -ErrorAction SilentlyContinue
+            }
+        }
+
+        [pscustomobject]@{
             FilesEncryptedViaRSA                = $RSAEncryptedFileNames
             FilesEncryptedViaAES                = $AESEncryptedFileNames
-            OriginalFiles                       = $OriginalFiles
+            OriginalFiles                       = $FinalOriginalFileItems.FullName
             CertficateUsedForRSAEncryption      = $Cert1
             LocationOfCertUsedForRSAEncryption  = $CertLocation
             UnprotectedAESKey                   = $FileEncryptionInfo.AESKey
@@ -3035,8 +3066,8 @@ if (Test-Path "$PSScriptRoot\VariableLibrary.ps1") {
 # SIG # Begin signature block
 # MIIMiAYJKoZIhvcNAQcCoIIMeTCCDHUCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQU2OH1qP/azKuEHQsTVJPtpvJl
-# LQSgggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUYQBaWz7rPObVO9NUDNT9tYwT
+# UUegggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
 # 9w0BAQsFADAwMQwwCgYDVQQGEwNMQUIxDTALBgNVBAoTBFpFUk8xETAPBgNVBAMT
 # CFplcm9EQzAxMB4XDTE3MDkyMDIxMDM1OFoXDTE5MDkyMDIxMTM1OFowPTETMBEG
 # CgmSJomT8ixkARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMT
@@ -3093,11 +3124,11 @@ if (Test-Path "$PSScriptRoot\VariableLibrary.ps1") {
 # ARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMTB1plcm9TQ0EC
 # E1gAAAH5oOvjAv3166MAAQAAAfkwCQYFKw4DAhoFAKB4MBgGCisGAQQBgjcCAQwx
 # CjAIoAKAAKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcCAQQwHAYKKwYBBAGC
-# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFIXLs34paLYUkYAU
-# s4/WPxPFDHFzMA0GCSqGSIb3DQEBAQUABIIBAGBQnUC52CFa4DoHSwKDH1F7HwSu
-# ZbZ2lOBRQ44JFJrBGsevYgECTSFs9DmFeNDNz9lbg53qJ2XZz/DsL1Wz+Zg2lgq+
-# ndN8oI7p2T20uQoQGBzKHcQoamCn2zPfDTtUst9+pip5k2LVuqmJGcr5dQSosE4n
-# 8If02oKlmZ5ayuX5SL9oHKpw46GLpActq6kjDYc9xT3gL7JlBOd0V7DdSuxJtp2c
-# eVzh5FjvylrW2a03UxxuczdjMTY18Oe/IY78iwrksKSpOHvLk7Q69cQawnnBvX6C
-# yI3ntHofqukZfv9+ZvnyPI3gItIobKaPOhyFGcNrdLNxKwuJO4nCkxdVV/g=
+# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFOVgL8BL0lcq6krs
+# ypT26iv5d1PLMA0GCSqGSIb3DQEBAQUABIIBAJricShddBoKnjwiRHW39R64VC+S
+# 1V9fcVFM46a81Uus/wcXyjoHaEHL13c9Jnuspeia32s3675IzKtV/BevUDRV1SU5
+# 1fSt0VEEWcZ12V03SUMfIo7AZ6dzW5e5ENF2xv8N6DqI06IWb5hACO2N26rTXtdD
+# 5B2saU56CL017EztfujKqh8t6XosbvbFWq5EUwDspzl4535+KBg6wocRbj15Vuvi
+# PI3nlyD9BJSrQgmQRv0/PB/YG9n5Ek9ikiBsrmqdFVm87OeCGPF7+mqhT5qjV2qp
+# nA5lFm5Xk0BXujtgY6JKVaedguuKncoPsXW1FUs/KCg3mCncyMoF5ibSpdQ=
 # SIG # End signature block
