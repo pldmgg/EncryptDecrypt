@@ -579,6 +579,17 @@ function Extract-PfxCerts {
         This parameter is a switch. If you do NOT want decrypted information written to a file, use this parameter. The
         decrypted info will ONLY be written to console as part of the DecryptedContent Property of the PSCustomObject output.
 
+    .PARAMETER RemoveOriginalFile
+        Optional.
+
+        This parameter is a switch. By default, original encrypted files left on the filesystem. Use this switch to remove
+        the original encrypted files.
+
+    .PARAMETER TryRSADecryption
+        Optional.
+
+        This parameter is a switch. Use it to try RSA Decryption even if you provide -AESKey or -AESKeyLocation.
+
     .EXAMPLE
         # Decrypting an Encrypted String without File Outputs
         PS C:\Users\zeroadmin> $EncryptedStringTest = Get-Content C:\Users\zeroadmin\other\MySecret.txt.rsaencrypted
@@ -784,6 +795,9 @@ function Get-DecryptedContent {
         [switch]$NoFileOutput,
 
         [Parameter(Mandatory=$False)]
+        [switch]$RemoveOriginalFile,
+
+        [Parameter(Mandatory=$False)]
         [switch]$TryRSADecryption
     )
 
@@ -803,6 +817,11 @@ function Get-DecryptedContent {
     }
     if ($Recurse -and $SourceType -ne "Directory") {
         Write-Error "The -Recurse switch should only be used when -SourceType is 'Directory'! Halting!"
+        $global:FunctionResult = "1"
+        return
+    }
+    if ($RemoveOriginalFile -and $SourceType -notmatch "File|Directory") {
+        Write-Error "The -RemoveOriginalFile parameter should only be used when -SourceType is 'File' or 'Directory'! Halting!"
         $global:FunctionResult = "1"
         return
     }
@@ -1101,7 +1120,7 @@ function Get-DecryptedContent {
 
                 $null = $DecryptedFiles.Add($OutputFile)
 
-                if ($SourceType -eq "File") {
+                if ($SourceType -eq "File" -and $RemoveOriginalFile) {
                     $null = Remove-Item $ContentToDecrypt -Force -ErrorAction SilentlyContinue
                 }
             }
@@ -1123,7 +1142,7 @@ function Get-DecryptedContent {
 
                     $null = $DecryptedFiles.Add($OutputFile)
 
-                    if ($SourceType -eq "File") {
+                    if ($SourceType -eq "File" -and $RemoveOriginalFile) {
                         $null = Remove-Item $ContentToDecrypt -Force -ErrorAction SilentlyContinue
                     }
                 }
@@ -1209,13 +1228,21 @@ function Get-DecryptedContent {
                 }
 
                 try {
-                    $DecryptInfo = Get-DecryptedContent -SourceType File -ContentToDecrypt $file -PathToPfxFile $PathToPfxFile -ErrorAction Stop
+                    $GetDecryptSplatParams = @{
+                        SourceType          = "File"
+                        ContentToDecrypt    = $file
+                        PathToPfxFile       = $PathToPfxFile
+                        ErrorAction         = "Stop"
+                    }
+                    if ($RemoveOriginalFile) {
+                        $GetDecryptSplatParams.Add("RemoveOriginalFile",$True)
+                    }
+                    $DecryptInfo = Get-DecryptedContent @GetDecryptSplatParams
                     $OutputFile = $DecryptInfo.DecryptedFiles
 
                     if ($OutputFile) {
                         $null = $DecryptedFiles.Add($OutputFile)
                     }
-                    #$null = Remove-Item $file -Force -ErrorAction SilentlyContinue
                 }
                 catch {
                     #Write-Error $_
@@ -1251,7 +1278,9 @@ function Get-DecryptedContent {
                     $FileDecryptionInfo = DecryptFile $ContentToDecrypt -Key $AESKey -ErrorAction Stop
                     $null = $DecryptedFiles.Add("$ContentToDecrypt.decrypted")
 
-                    $null = Remove-Item $ContentToDecrypt -Force -ErrorAction SilentlyContinue
+                    if ($RemoveOriginalFile) {
+                        $null = Remove-Item $ContentToDecrypt -Force -ErrorAction SilentlyContinue
+                    }
                 }
                 catch {
                     #Write-Error $_
@@ -1307,13 +1336,23 @@ function Get-DecryptedContent {
                 }
                 
                 try {
-                    $DecryptInfo = Get-DecryptedContent -SourceType File -ContentToDecrypt $file -PathToPfxFile $PathToPfxFile -AESKey $AESKey -TryRSADecryption -ErrorAction Stop
+                    $GetDecryptSplatParams = @{
+                        SourceType          = "File"
+                        ContentToDecrypt    = $file
+                        PathToPfxFile       = $PathToPfxFile
+                        AESKey              = $AESKey
+                        TryRSADecryption    = $True
+                        ErrorAction         = "Stop"
+                    }
+                    if ($RemoveOriginalFile) {
+                        $GetDecryptSplatParams.Add("RemoveOriginalFile",$True)
+                    }
+                    $DecryptInfo = Get-DecryptedContent @GetDecryptSplatParams
                     $OutputFile = $DecryptInfo.DecryptedFiles
 
                     if ($OutputFile) {
                         $null = $DecryptedFiles.Add($OutputFile)
                     }
-                    #$null = Remove-Item $file -Force -ErrorAction SilentlyContinue
                 }
                 catch {
                     Write-Error $_
@@ -3066,8 +3105,8 @@ if (Test-Path "$PSScriptRoot\VariableLibrary.ps1") {
 # SIG # Begin signature block
 # MIIMiAYJKoZIhvcNAQcCoIIMeTCCDHUCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUYQBaWz7rPObVO9NUDNT9tYwT
-# UUegggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUguKk438ayi22h7CXQaVSgV/a
+# iiOgggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
 # 9w0BAQsFADAwMQwwCgYDVQQGEwNMQUIxDTALBgNVBAoTBFpFUk8xETAPBgNVBAMT
 # CFplcm9EQzAxMB4XDTE3MDkyMDIxMDM1OFoXDTE5MDkyMDIxMTM1OFowPTETMBEG
 # CgmSJomT8ixkARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMT
@@ -3124,11 +3163,11 @@ if (Test-Path "$PSScriptRoot\VariableLibrary.ps1") {
 # ARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMTB1plcm9TQ0EC
 # E1gAAAH5oOvjAv3166MAAQAAAfkwCQYFKw4DAhoFAKB4MBgGCisGAQQBgjcCAQwx
 # CjAIoAKAAKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcCAQQwHAYKKwYBBAGC
-# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFOVgL8BL0lcq6krs
-# ypT26iv5d1PLMA0GCSqGSIb3DQEBAQUABIIBAJricShddBoKnjwiRHW39R64VC+S
-# 1V9fcVFM46a81Uus/wcXyjoHaEHL13c9Jnuspeia32s3675IzKtV/BevUDRV1SU5
-# 1fSt0VEEWcZ12V03SUMfIo7AZ6dzW5e5ENF2xv8N6DqI06IWb5hACO2N26rTXtdD
-# 5B2saU56CL017EztfujKqh8t6XosbvbFWq5EUwDspzl4535+KBg6wocRbj15Vuvi
-# PI3nlyD9BJSrQgmQRv0/PB/YG9n5Ek9ikiBsrmqdFVm87OeCGPF7+mqhT5qjV2qp
-# nA5lFm5Xk0BXujtgY6JKVaedguuKncoPsXW1FUs/KCg3mCncyMoF5ibSpdQ=
+# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFDUFESSFss/XYkcc
+# YlOCZhhTBEQwMA0GCSqGSIb3DQEBAQUABIIBAKqEgXiLP+fyG/rZYQLBOKmNa2Lb
+# Pa4R4X9Iy0oNF7GtUbo5mekWFcxXTH0qIObo9tK4QilNJcV7bqsr5MuSgmAerv1k
+# 4FxmuGHd3aYiIfrc6xfcu+hpAJrJRfpr1J1b9nR3UAa6dlOqypm04wYHDjDuu/Nj
+# 2OWMyQG6OdhMD3DKjNWE5nn6+sunYDjVBwPN/SLDZARdhVL7cExUru/NZtuaTeQ7
+# x+iEGszgLgcT/wS+ye7SVX3mqFhaK+9StLph0YJZtJ3EGnDB3EXTafuLrqDuMXEG
+# BMp14nl3bSEUJrwKz4QNTqQqhZTtadctxrMZIw2VdKeB6cYgUbU0k4zrKR4=
 # SIG # End signature block
