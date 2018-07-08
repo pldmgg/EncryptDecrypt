@@ -63,7 +63,6 @@ RSAEncryptedAESKeyLocation         :
 AllFileOutputs                     : {C:\Users\zeroadmin\Downloads\StringTest.txt.rsaencrypted, C:\Users\zeroadmin\Downloads\String1.pfx}
 
 PS C:\Users\zeroadmin> Get-DecryptedContent -SourceType File -ContentToDecrypt "$HOME\Downloads\StringTest.txt.rsaencrypted" -PathToPfxFile "$HOME\Downloads\String1.pfx"
-Doing RSA Decryption
 
 
 DecryptedFiles                     : C:\Users\zeroadmin\Downloads\StringTest.txt.rsaencrypted.decrypted
@@ -133,7 +132,6 @@ AllFileOutputs                     : {C:\Users\zeroadmin\Downloads\ArrayOfString
                                      C:\Users\zeroadmin\Downloads\ArrayOfStrings1.pfx}
 
 PS C:\Users\zeroadmin> Get-DecryptedContent -SourceType File -ContentToDecrypt "$HOME\Downloads\ArrayOfStrings1_0.txt.rsaencrypted" -PathToPfxFile "$HOME\Downloads\ArrayOfStrings1.pfx"
-Doing RSA Decryption
 
 
 DecryptedFiles                     : C:\Users\zeroadmin\Downloads\ArrayOfStrings1_0.txt.rsaencrypted.decrypted
@@ -169,12 +167,12 @@ DecryptedContent                   : apple
 IMPORTANT NOTE: If a file is small enough in size, RSA Encryption/Decryption will be used.
 
 ```powershell
-PS C:\Users\zeroadmin> New-EncryptedFile -SourceType File -ContentToEncrypt "C:\Users\zeroadmin\Downloads\SmallContent1.txt" -CNOfNewCert "SmallContent1"
+PS C:\Users\zeroadmin> New-EncryptedFile -SourceType File -ContentToEncrypt "$HOME\Downloads\SmallContent1.txt" -CNOfNewCert "SmallContent1"
 
 
 FileEncryptedViaRSA                : C:\Users\zeroadmin\Downloads\SmallContent1.txt.rsaencrypted
 FileEncryptedViaAES                :
-OriginalFile                       : C:\Users\zeroadmin\Downloads\SmallContent1.txt.original
+OriginalFile                       : C:\Users\zeroadmin\Downloads\SmallContent1.txt
 CertficateUsedForRSAEncryption     : [Subject]
                                        CN=SmallContent1
 
@@ -197,11 +195,10 @@ LocationOfCertUsedForRSAEncryption : Cert:\LocalMachine\My\580F4AD5AAEFEEF542898
 UnprotectedAESKey                  :
 RSAEncryptedAESKey                 :
 RSAEncryptedAESKeyLocation         :
-AllFileOutputs                     : {C:\Users\zeroadmin\Downloads\SmallContent1.txt.rsaencrypted, C:\Users\zeroadmin\Downloads\SmallContent1.txt.original,
+AllFileOutputs                     : {C:\Users\zeroadmin\Downloads\SmallContent1.txt.rsaencrypted, C:\Users\zeroadmin\Downloads\SmallContent1.txt,
                                      C:\Users\zeroadmin\Downloads\SmallContent1.pfx}
 
-PS C:\Users\zeroadmin> Get-DecryptedContent -SourceType File -ContentToDecrypt "C:\Users\zeroadmin\Downloads\SmallContent1.txt.rsaencrypted" -PathToPfxFile "C:\Users\zeroadmin\Downloads\SmallContent1.pfx"
-Doing RSA Decryption
+PS C:\Users\zeroadmin> Get-DecryptedContent -SourceType File -ContentToDecrypt "$HOME\Downloads\SmallContent1.txt.rsaencrypted" -PathToPfxFile "$HOME\Downloads\SmallContent1.pfx"
 
 
 DecryptedFiles                     : C:\Users\zeroadmin\Downloads\SmallContent1.txt.rsaencrypted.decrypted
@@ -237,12 +234,12 @@ DecryptedContent                   : Small amount of text
 IMPORTANT NOTE: If a file is big enough in size, AES Encryption/Decryption will be used. To clarify, an AES Key will be generated and used to encrypt the file. That same AES Key will (itself) be written to a file. That file will be encrypted via RSA. So, when decrypting a big file that was encrypted via AES, you will need a .pfx file (or the existing X509Certificate2 object from your 'Cert:\LocalMachine\My' store), AND the RSA-Encrypted AES Key File (or the AES Key in Plain Text).
 
 ```powershell
-PS C:\Users\zeroadmin> New-EncryptedFile -SourceType File -ContentToEncrypt "C:\Users\zeroadmin\Downloads\BigContent1.txt" -CNOfNewCert "BigContent1"
+PS C:\Users\zeroadmin> New-EncryptedFile -SourceType File -ContentToEncrypt "$HOME\Downloads\BigContent1.txt" -CNOfNewCert "BigContent1"
 
 
 FileEncryptedViaRSA                :
 FileEncryptedViaAES                : C:\Users\zeroadmin\Downloads\BigContent1.txt.aesencrypted
-OriginalFile                       : C:\Users\zeroadmin\Downloads\BigContent1.txt.original
+OriginalFile                       : C:\Users\zeroadmin\Downloads\BigContent1.txt
 CertficateUsedForRSAEncryption     : [Subject]
                                        CN=BigContent1
 
@@ -267,12 +264,11 @@ RSAEncryptedAESKey                 : wImpmf8ghXUtcTthHU5WO68GamIbYbamL9/JHObh4sW
                                      MgmdSyed8YXkYOnnzDaCNqXno7CabrZTY6ipKX6PLZ6Ovsb1j+yNyvXEL1Q+ly08Kfdtf2jNTx3hQ2lIbT/OwdMUls5X960UWkNyeDp1DsUk2X5DYtu7WPbhdh
                                      ci3lmnvQg8lniXP8PddzwA1PyXdfIWqDj5DT6+0RdcUW0aod7hu8Npn7UQk4UsTuNjc6bnr2KM7rQD+Hl4khxRayLPU2wcih2g==
 RSAEncryptedAESKeyLocation         : C:\Users\zeroadmin\Downloads\BigContent1.aeskey.rsaencrypted
-AllFileOutputs                     : {C:\Users\zeroadmin\Downloads\BigContent1.txt.aesencrypted, C:\Users\zeroadmin\Downloads\BigContent1.txt.original,
+AllFileOutputs                     : {C:\Users\zeroadmin\Downloads\BigContent1.txt.aesencrypted, C:\Users\zeroadmin\Downloads\BigContent1.txt,
                                      C:\Users\zeroadmin\Downloads\BigContent1.aeskey.rsaencrypted, C:\Users\zeroadmin\Downloads\BigContent1.pfx}
 
 
 PS C:\Users\zeroadmin> Get-DecryptedContent -SourceType File -ContentToDecrypt "$HOME\Downloads\BigContent1.txt.aesencrypted" -PathToPfxFile "$HOME\Downloads\BigContent1.pfx" -AESKeyLocation "$HOME\Downloads\BigContent1.aeskey.rsaencrypted"
-Doing AES Decryption
 
 
 DecryptedFiles                     : C:\Users\zeroadmin\Downloads\BigContent1.txt.aesencrypted.decrypted
@@ -315,6 +311,82 @@ DecryptedContent                   : {Lorem ipsum dolor sit amet, consectetur ad
                                      sit amet nisl suscipit. Ultricies integer quis auctor elit sed vulputate mi. Ut sem nulla pharetra diam sit amet nisl
                                      suscipit adipiscing. Eget felis eget nunc lobortis mattis aliquam faucibus. Nibh mauris cursus mattis molestie. Felis
                                      eget velit aliquet sagittis id consectetur purus ut. Pellentesque habitant morbi tristique senectus., ...}
+```
+
+### Scenario 5: Encrypt/Decrypt All Files in a Directory
+
+```powershell
+PS C:\Users\zeroadmin> New-EncryptedFile -SourceType Directory -ContentToEncrypt "$HOME\tempdir" -CNOfNewCert "TestCert2" -Recurse
+
+
+FilesEncryptedViaRSA               : {C:\Users\zeroadmin\tempdir\DomainCreds4.txt.rsaencrypted, C:\Users\zeroadmin\tempdir\Focus.txt.rsaencrypted,
+                                     C:\Users\zeroadmin\tempdir\Other.txt.rsaencrypted, C:\Users\zeroadmin\tempdir\Things.txt.rsaencrypted...}
+FilesEncryptedViaAES               : {C:\Users\zeroadmin\tempdir\BigContent.txt.aesencrypted, C:\Users\zeroadmin\tempdir\DomainCreds2.cer.aesencrypted,
+                                     C:\Users\zeroadmin\tempdir\DomainCreds3.cer.aesencrypted, C:\Users\zeroadmin\tempdir\DomainCreds3.pfx.aesencrypted...}
+OriginalFiles                      : {C:\Users\zeroadmin\tempdir\BigContent.txt, C:\Users\zeroadmin\tempdir\DomainCreds2.cer,
+                                     C:\Users\zeroadmin\tempdir\DomainCreds3.cer, C:\Users\zeroadmin\tempdir\DomainCreds3.pfx...}
+CertficateUsedForRSAEncryption     : [Subject]
+                                       CN=TestCert2
+
+                                     [Issuer]
+                                       CN=TestCert2
+
+                                     [Serial Number]
+                                       14F9955434EC358542DBDC2E53089E33
+
+                                     [Not Before]
+                                       7/7/2018 6:31:05 AM
+
+                                     [Not After]
+                                       7/7/2019 6:31:05 AM
+
+                                     [Thumbprint]
+                                       F820B642D189AF6808A71FE0F79539DFE1B84ABB
+
+LocationOfCertUsedForRSAEncryption : Cert:\LocalMachine\My\F820B642D189AF6808A71FE0F79539DFE1B84ABB
+UnprotectedAESKey                  : ToWQK1h44AZLM364/yYImgEaKbzaJ+5Y/Mv6Qhh44VQ=
+RSAEncryptedAESKey                 : OVGRknOaAzoWUklokqe3sMTBiS1KC/Qivh0rQV/jE+r8PI6NcQDxMrfDV6R+5G0rnUK8KfDj05+CbI812Kgfd5lfpOiBFjsANUAAcDzHku4EjG3WAwMsJcnvU6
+                                     7ejjOxJCt/UcIE5nyTmKzBpfQ6eeT5nFmErKJs+6//Dp0VKo43qmvkK/VeiyYiBlS2b7JkcC+t1g8qBh1w5iFY5TDAMmsZIX3GgE2x5yvE4H6P80Xev4BcFmie
+                                     NKdnW0nEgejfHRRM5+CRVgsGDUf8FQ/jpjI5kE0I3hvpebnlKGClk899LEiAulh+D/uMlycbRPOjA/3FIyDbGcqRe7NKOFIbIQ==
+RSAEncryptedAESKeyLocation         : C:\Users\zeroadmin\tempdir\tempdir.aeskey.rsaencrypted
+AllFileOutputs                     : {C:\Users\zeroadmin\tempdir\DomainCreds4.txt.rsaencrypted, C:\Users\zeroadmin\tempdir\Focus.txt.rsaencrypted,
+                                     C:\Users\zeroadmin\tempdir\Other.txt.rsaencrypted, C:\Users\zeroadmin\tempdir\Things.txt.rsaencrypted...}
+
+
+
+PS C:\Users\zeroadmin> Get-DecryptedContent -SourceType Directory -ContentToDecrypt "$HOME\tempdir" -PathToPfxFile "$HOME\tempdir\TestCert2.pfx" -AESKeyLocation "$HOME\tempdir\tempdir.aeskey.rsaencrypted"
+
+
+DecryptedFiles                     : {C:\Users\zeroadmin\tempdir\DomainCreds4.txt.rsaencrypted.decrypted,
+                                     C:\Users\zeroadmin\tempdir\Focus.txt.rsaencrypted.decrypted, C:\Users\zeroadmin\tempdir\Other.txt.rsaencrypted.decrypted,
+                                     C:\Users\zeroadmin\tempdir\Things.txt.rsaencrypted.decrypted...}
+FailedToDecryptFiles               :
+CertUsedDuringDecryption           : [Subject]
+                                       CN=TestCert2
+
+                                     [Issuer]
+                                       CN=TestCert2
+
+                                     [Serial Number]
+                                       14F9955434EC358542DBDC2E53089E33
+
+                                     [Not Before]
+                                       7/7/2018 6:31:05 AM
+
+                                     [Not After]
+                                       7/7/2019 6:31:05 AM
+
+                                     [Thumbprint]
+                                       F820B642D189AF6808A71FE0F79539DFE1B84ABB
+
+PFXCertUsedForPrivateKeyExtraction :
+LocationOfCertUsedDuringDecryption : C:\Users\zeroadmin\tempdir\TestCert2.pfx
+UnprotectedAESKey                  : ToWQK1h44AZLM364/yYImgEaKbzaJ+5Y/Mv6Qhh44VQ=
+LocationOfAESKey                   : C:\Users\zeroadmin\tempdir\tempdir.aeskey.rsaencrypted
+AllFileOutputs                     : {C:\Users\zeroadmin\tempdir\DomainCreds4.txt.rsaencrypted.decrypted,
+                                     C:\Users\zeroadmin\tempdir\Focus.txt.rsaencrypted.decrypted, C:\Users\zeroadmin\tempdir\Other.txt.rsaencrypted.decrypted,
+                                     C:\Users\zeroadmin\tempdir\Things.txt.rsaencrypted.decrypted...}
+DecryptedContent                   : {teststring, This is dogfort, whenever things are going, Things and stuff...}
 ```
 
 ## Notes

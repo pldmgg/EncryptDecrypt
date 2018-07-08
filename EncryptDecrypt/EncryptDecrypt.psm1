@@ -579,12 +579,6 @@ function Extract-PfxCerts {
         This parameter is a switch. If you do NOT want decrypted information written to a file, use this parameter. The
         decrypted info will ONLY be written to console as part of the DecryptedContent Property of the PSCustomObject output.
 
-    .PARAMETER RemoveOriginalFile
-        Optional.
-
-        This parameter is a switch. By default, original encrypted files left on the filesystem. Use this switch to remove
-        the original encrypted files.
-
     .PARAMETER TryRSADecryption
         Optional.
 
@@ -795,9 +789,6 @@ function Get-DecryptedContent {
         [switch]$NoFileOutput,
 
         [Parameter(Mandatory=$False)]
-        [switch]$RemoveOriginalFile,
-
-        [Parameter(Mandatory=$False)]
         [switch]$TryRSADecryption
     )
 
@@ -817,11 +808,6 @@ function Get-DecryptedContent {
     }
     if ($Recurse -and $SourceType -ne "Directory") {
         Write-Error "The -Recurse switch should only be used when -SourceType is 'Directory'! Halting!"
-        $global:FunctionResult = "1"
-        return
-    }
-    if ($RemoveOriginalFile -and $SourceType -notmatch "File|Directory") {
-        Write-Error "The -RemoveOriginalFile parameter should only be used when -SourceType is 'File' or 'Directory'! Halting!"
         $global:FunctionResult = "1"
         return
     }
@@ -999,14 +985,15 @@ function Get-DecryptedContent {
     }
 
     # Figure out if we need an AES key. If so, get it.
-    if ($TypeOfEncryptionUsed -eq "AES" -or $ContentToDecrypt -match "\.aesencrypted" -or $AESKey -or $AESKeyLocation) {
-        $NeedAES = $true
+    if ($($TypeOfEncryptionUsed -eq "AES" -or $ContentToDecrypt -match "\.aesencrypted" -or $AESKey -or $AESKeyLocation) -or
+    $($SourceType -eq "Directory" -and $TypeOfEncryptionUsed -ne "RSA" -and !$TryRSADecryption)
+    ) {
+        $NeedAES = $True
     }
-    if ($SourceType -eq "Directory" -and $TypeOfEncryptionUsed -ne "RSA") {
-        # Default to $NeedAES since the Decryption Code Block where SourceType is "Directory" can handle both AES and RSA
-        # by first trying AES Decryption, and if that fails, trying RSA Decryption
-        $NeedAES = $true
+    else {
+        $NeedAES = $False
     }
+    
     if ($NeedAES) {
         if (!$AESKey -and !$AESKeyLocation) {
             $ErrMsg = "The $($MyInvocation.MyCommand.Name) function has determined that either the -AESKey " +
@@ -1081,7 +1068,7 @@ function Get-DecryptedContent {
     [System.Collections.ArrayList]$DecryptedFiles = @()
     [System.Collections.ArrayList]$FailedToDecryptFiles = @()
     # Do RSA Decryption on $ContentToDecrypt
-    if ($TypeOfEncryptionUsed -eq "RSA" -or !$NeedAES -or $TryRSADecryption) {
+    if ($TypeOfEncryptionUsed -ne "AES" -or $TryRSADecryption) {
         #Write-Host "Doing RSA Decryption"
         if ($SourceType -eq "String" -or $SourceType -eq "File") {
             if ($SourceType -eq "String") {
@@ -1119,10 +1106,6 @@ function Get-DecryptedContent {
                 $null = [System.IO.File]::WriteAllLines("$OutputFile", $DecryptedContent2)
 
                 $null = $DecryptedFiles.Add($OutputFile)
-
-                if ($SourceType -eq "File" -and $RemoveOriginalFile) {
-                    $null = Remove-Item $ContentToDecrypt -Force -ErrorAction SilentlyContinue
-                }
             }
             catch {
                 try {
@@ -1141,10 +1124,6 @@ function Get-DecryptedContent {
                     $null = [System.IO.File]::WriteAllLines("$OutputFile", $DecryptedContent2)
 
                     $null = $DecryptedFiles.Add($OutputFile)
-
-                    if ($SourceType -eq "File" -and $RemoveOriginalFile) {
-                        $null = Remove-Item $ContentToDecrypt -Force -ErrorAction SilentlyContinue
-                    }
                 }
                 catch {
                     #Write-Error $_
@@ -1209,13 +1188,15 @@ function Get-DecryptedContent {
             if ($Recurse) {
                 $DecryptionCandidates = $(Get-ChildItem -Path $ContentToDecrypt -Recurse -File | Where-Object {
                     $_.FullName -notmatch [regex]::Escape($(Get-Item $PathToPfxFile).BaseName) -and
-                    $_.FullName -notmatch "\.aeskey"
+                    $_.FullName -notmatch "\.aeskey" -and
+                    $_.FullName -notmatch "\.decrypted$"
                 }).FullName
             }
             if (!$Recurse) {
                 $DecryptionCandidates = $(Get-ChildItem -Path $ContentToDecrypt -File | Where-Object {
                     $_.FullName -notmatch [regex]::Escape($(Get-Item $PathToPfxFile).BaseName) -and
-                    $_.FullName -notmatch "\.aeskey"
+                    $_.FullName -notmatch "\.aeskey" -and
+                    $_.FullName -notmatch "\.decrypted$"
                 }).FullName
             }
 
@@ -1232,16 +1213,15 @@ function Get-DecryptedContent {
                         SourceType          = "File"
                         ContentToDecrypt    = $file
                         PathToPfxFile       = $PathToPfxFile
+                        TryRSADecryption    = $True
                         ErrorAction         = "Stop"
-                    }
-                    if ($RemoveOriginalFile) {
-                        $GetDecryptSplatParams.Add("RemoveOriginalFile",$True)
                     }
                     $DecryptInfo = Get-DecryptedContent @GetDecryptSplatParams
                     $OutputFile = $DecryptInfo.DecryptedFiles
 
                     if ($OutputFile) {
                         $null = $DecryptedFiles.Add($OutputFile)
+                        $null = Remove-Item -Path $file -Force -ErrorAction SilentlyContinue
                     }
                 }
                 catch {
@@ -1251,6 +1231,7 @@ function Get-DecryptedContent {
             }
         }
     }
+
     # Do AES Decryption on $ContentToDecrypt
     if ($TypeOfEncryptionUsed -eq "AES" -or $NeedAES) {
         #Write-Host "Doing AES Decryption"
@@ -1277,10 +1258,6 @@ function Get-DecryptedContent {
                 try {
                     $FileDecryptionInfo = DecryptFile $ContentToDecrypt -Key $AESKey -ErrorAction Stop
                     $null = $DecryptedFiles.Add("$ContentToDecrypt.decrypted")
-
-                    if ($RemoveOriginalFile) {
-                        $null = Remove-Item $ContentToDecrypt -Force -ErrorAction SilentlyContinue
-                    }
                 }
                 catch {
                     #Write-Error $_
@@ -1317,13 +1294,16 @@ function Get-DecryptedContent {
             if ($Recurse) {
                 $DecryptionCandidates = $(Get-ChildItem -Path $ContentToDecrypt -Recurse -File | Where-Object {
                     $_.FullName -notmatch [regex]::Escape($(Get-Item $PathToPfxFile).BaseName) -and
-                    $_.FullName -notmatch "\.aeskey"
+                    $_.FullName -notmatch "\.aeskey" -and
+                    $_.FullName -notmatch "\.decrypted$"
+
                 }).FullName
             }
             if (!$Recurse) {
                 $DecryptionCandidates = $(Get-ChildItem -Path $ContentToDecrypt -File | Where-Object {
                     $_.FullName -notmatch [regex]::Escape($(Get-Item $PathToPfxFile).BaseName) -and
-                    $_.FullName -notmatch "\.aeskey"
+                    $_.FullName -notmatch "\.aeskey" -and
+                    $_.FullName -notmatch "\.decrypted$"
                 }).FullName
             }
 
@@ -1344,9 +1324,6 @@ function Get-DecryptedContent {
                         TryRSADecryption    = $True
                         ErrorAction         = "Stop"
                     }
-                    if ($RemoveOriginalFile) {
-                        $GetDecryptSplatParams.Add("RemoveOriginalFile",$True)
-                    }
                     $DecryptInfo = Get-DecryptedContent @GetDecryptSplatParams
                     $OutputFile = $DecryptInfo.DecryptedFiles
 
@@ -1355,7 +1332,7 @@ function Get-DecryptedContent {
                     }
                 }
                 catch {
-                    Write-Error $_
+                    #Write-Error $_
                     $null = $FailedToDecryptFiles.Add($OutputFile)
                 }
             }
@@ -1371,9 +1348,15 @@ function Get-DecryptedContent {
     $AllFileOutputsPrep = $DecryptedFiles,$PFXCertUsedForPrivateKeyExtraction
     $AllFileOutputs = foreach ($element in $AllFileOutputsPrep) {if ($element -ne $null) {$element}}
 
+    $FinalFailedToDecryptFiles = foreach ($FullPath in $FailedToDecryptFiles) {
+        if ($DecryptedFiles -notcontains "$FullPath.decrypted") {
+            $FullPath
+        }
+    }
+
     [pscustomobject]@{
         DecryptedFiles                          = $(if ($NoFileOutput) {$null} else {$DecryptedFiles})
-        FailedToDecryptFiles                    = $FailedToDecryptFiles
+        FailedToDecryptFiles                    = $FinalFailedToDecryptFiles
         CertUsedDuringDecryption                = $Cert1
         PFXCertUsedForPrivateKeyExtraction      = $PFXCertUsedForPrivateKeyExtraction
         LocationOfCertUsedDuringDecryption      = $(if ($PathToPfxFile) {$PathToPfxFile} else {"Cert:\LocalMachine\My"})
@@ -3105,8 +3088,8 @@ if (Test-Path "$PSScriptRoot\VariableLibrary.ps1") {
 # SIG # Begin signature block
 # MIIMiAYJKoZIhvcNAQcCoIIMeTCCDHUCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUguKk438ayi22h7CXQaVSgV/a
-# iiOgggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUCNR1AMJC7bHtggemvr5mpOiQ
+# 57Cgggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
 # 9w0BAQsFADAwMQwwCgYDVQQGEwNMQUIxDTALBgNVBAoTBFpFUk8xETAPBgNVBAMT
 # CFplcm9EQzAxMB4XDTE3MDkyMDIxMDM1OFoXDTE5MDkyMDIxMTM1OFowPTETMBEG
 # CgmSJomT8ixkARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMT
@@ -3163,11 +3146,11 @@ if (Test-Path "$PSScriptRoot\VariableLibrary.ps1") {
 # ARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMTB1plcm9TQ0EC
 # E1gAAAH5oOvjAv3166MAAQAAAfkwCQYFKw4DAhoFAKB4MBgGCisGAQQBgjcCAQwx
 # CjAIoAKAAKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcCAQQwHAYKKwYBBAGC
-# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFDUFESSFss/XYkcc
-# YlOCZhhTBEQwMA0GCSqGSIb3DQEBAQUABIIBAKqEgXiLP+fyG/rZYQLBOKmNa2Lb
-# Pa4R4X9Iy0oNF7GtUbo5mekWFcxXTH0qIObo9tK4QilNJcV7bqsr5MuSgmAerv1k
-# 4FxmuGHd3aYiIfrc6xfcu+hpAJrJRfpr1J1b9nR3UAa6dlOqypm04wYHDjDuu/Nj
-# 2OWMyQG6OdhMD3DKjNWE5nn6+sunYDjVBwPN/SLDZARdhVL7cExUru/NZtuaTeQ7
-# x+iEGszgLgcT/wS+ye7SVX3mqFhaK+9StLph0YJZtJ3EGnDB3EXTafuLrqDuMXEG
-# BMp14nl3bSEUJrwKz4QNTqQqhZTtadctxrMZIw2VdKeB6cYgUbU0k4zrKR4=
+# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFPBWqhey+TOZb70M
+# 3odjb26IEZI/MA0GCSqGSIb3DQEBAQUABIIBAC4670dbbVLVeNXRhgeYwHICQJl6
+# 5D8IBdspAz+C8lCwEDNkYX5TpB0KCLT8Rsp7WmqhSjZezwn5Z+YA+jLcwf5CbeWa
+# ygDI3AQNeYdRZNZlvl00bY0iX9Gzxc/MBr6M/EmS5Nr+WxoSFWE2KlS1BPZszZV2
+# h5Efzu95c7s/c+bM2bW09dHBxbxJO5ReBgt8Gi6OFS1W59Hk4+CphZ6xlm570ei4
+# 7TdycAXe8p8WY04dV/q5C/eHpSDAaJDyOD4bbuv0yDHrTuXQ6XyWOP9f4zi3F3az
+# 4q8xHnPvMIQnpsc+yh0jfJvwuhYfI5z9YniV9EH0bvp8D3hSZ76MEofBapQ=
 # SIG # End signature block

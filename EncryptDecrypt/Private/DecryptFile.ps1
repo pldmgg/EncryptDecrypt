@@ -72,81 +72,85 @@ Function DecryptFile {
     $FailedToDecryptFiles = @()
 
     foreach ($File in $FileToDecrypt) {
-        #Open file to decrypt
-        try {
-            $FileStreamReader = New-Object System.IO.FileStream($File.FullName, [System.IO.FileMode]::Open)
-        }
-        catch {
-            Write-Error "Unable to open $($File.FullName) for reading."
-            Continue
-        }
-    
-        #Create destination file
+        # Try to decrypt as long as the .decrypted file doesn't already exist
         $DestinationFile = "$($File.FullName).decrypted"
-        try {
-            $FileStreamWriter = New-Object System.IO.FileStream($DestinationFile, [System.IO.FileMode]::Create)
-        }
-        catch {
-            $FileStreamReader.Close()
-            $FileStreamWriter.Close()
-            Remove-Item $DestinationFile -Force
-            Write-Error "Unable to open $DestinationFile for writing."
-            Continue
-        }
 
-        #Get IV
-        try {
-            [Byte[]]$LenIV = New-Object Byte[] 4
-            $FileStreamReader.Seek(0, [System.IO.SeekOrigin]::Begin) | Out-Null
-            $FileStreamReader.Read($LenIV,  0, 3) | Out-Null
-            [Int]$LIV = [System.BitConverter]::ToInt32($LenIV,  0)
-            [Byte[]]$IV = New-Object Byte[] $LIV
-            $FileStreamReader.Seek(4, [System.IO.SeekOrigin]::Begin) | Out-Null
-            $FileStreamReader.Read($IV, 0, $LIV) | Out-Null
-            $AESProvider.IV = $IV
-        }
-        catch {
-            $FileStreamReader.Close()
-            $FileStreamWriter.Close()
-            Remove-Item $DestinationFile -Force
-            $FailedToDecryptFiles += $File
-            Write-Error "Unable to read IV from $($File.FullName), verify this file was made using the included EncryptFile function."
-            Continue
-        }
-
-        Write-Verbose "Decrypting $($File.FullName) with an IV of $([System.Convert]::ToBase64String($AESProvider.IV))"
-
-        #Decrypt
-        try {
-            $Transform = $AESProvider.CreateDecryptor()
-            [Int]$Count = 0
-            [Int]$BlockSizeBytes = $AESProvider.BlockSize / 8
-            [Byte[]]$Data = New-Object Byte[] $BlockSizeBytes
-            $CryptoStream = New-Object System.Security.Cryptography.CryptoStream($FileStreamWriter, $Transform, [System.Security.Cryptography.CryptoStreamMode]::Write)
-            Do
-            {
-                $Count = $FileStreamReader.Read($Data, 0, $BlockSizeBytes)
-                $CryptoStream.Write($Data, 0, $Count)
+        if (!$(Test-Path $DestinationFile)) {
+            #Open file to decrypt
+            try {
+                $FileStreamReader = New-Object System.IO.FileStream($File.FullName, [System.IO.FileMode]::Open)
             }
-            While ($Count -gt 0)
+            catch {
+                Write-Error "Unable to open $($File.FullName) for reading."
+                Continue
+            }
+        
+            #Create destination file
+            try {
+                $FileStreamWriter = New-Object System.IO.FileStream($DestinationFile, [System.IO.FileMode]::Create)
+            }
+            catch {
+                $FileStreamReader.Close()
+                $FileStreamWriter.Close()
+                Remove-Item $DestinationFile -Force
+                Write-Error "Unable to open $DestinationFile for writing."
+                Continue
+            }
 
-            $CryptoStream.FlushFinalBlock()
-            $CryptoStream.Close()
-            $FileStreamWriter.Close()
-            $FileStreamReader.Close()
+            #Get IV
+            try {
+                [Byte[]]$LenIV = New-Object Byte[] 4
+                $FileStreamReader.Seek(0, [System.IO.SeekOrigin]::Begin) | Out-Null
+                $FileStreamReader.Read($LenIV,  0, 3) | Out-Null
+                [Int]$LIV = [System.BitConverter]::ToInt32($LenIV,  0)
+                [Byte[]]$IV = New-Object Byte[] $LIV
+                $FileStreamReader.Seek(4, [System.IO.SeekOrigin]::Begin) | Out-Null
+                $FileStreamReader.Read($IV, 0, $LIV) | Out-Null
+                $AESProvider.IV = $IV
+            }
+            catch {
+                $FileStreamReader.Close()
+                $FileStreamWriter.Close()
+                Remove-Item $DestinationFile -Force
+                $FailedToDecryptFiles += $File
+                Write-Error "Unable to read IV from $($File.FullName), verify this file was made using the included EncryptFile function."
+                Continue
+            }
 
-            #Delete encrypted file
-            Remove-Item $File.FullName
-            Write-Verbose "Successfully decrypted $($File.FullName)"
-            $DecryptedFiles += $DestinationFile
-        }
-        catch {
-            Write-Error "Failed to decrypt $($File.FullName)."
-            $CryptoStream.Close()
-            $FileStreamWriter.Close()
-            $FileStreamReader.Close()
-            Remove-Item $DestinationFile
-            $FailedToDecryptFiles += $File
+            Write-Verbose "Decrypting $($File.FullName) with an IV of $([System.Convert]::ToBase64String($AESProvider.IV))"
+
+            #Decrypt
+            try {
+                $Transform = $AESProvider.CreateDecryptor()
+                [Int]$Count = 0
+                [Int]$BlockSizeBytes = $AESProvider.BlockSize / 8
+                [Byte[]]$Data = New-Object Byte[] $BlockSizeBytes
+                $CryptoStream = New-Object System.Security.Cryptography.CryptoStream($FileStreamWriter, $Transform, [System.Security.Cryptography.CryptoStreamMode]::Write)
+                Do
+                {
+                    $Count = $FileStreamReader.Read($Data, 0, $BlockSizeBytes)
+                    $CryptoStream.Write($Data, 0, $Count)
+                }
+                While ($Count -gt 0)
+
+                $CryptoStream.FlushFinalBlock()
+                $CryptoStream.Close()
+                $FileStreamWriter.Close()
+                $FileStreamReader.Close()
+
+                #Delete encrypted file
+                Remove-Item $File.FullName
+                Write-Verbose "Successfully decrypted $($File.FullName)"
+                $DecryptedFiles += $DestinationFile
+            }
+            catch {
+                Write-Error "Failed to decrypt $($File.FullName)."
+                $CryptoStream.Close()
+                $FileStreamWriter.Close()
+                $FileStreamReader.Close()
+                Remove-Item $DestinationFile
+                $FailedToDecryptFiles += $File
+            }
         }        
     }
 
@@ -161,8 +165,8 @@ Function DecryptFile {
 # SIG # Begin signature block
 # MIIMiAYJKoZIhvcNAQcCoIIMeTCCDHUCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQU9QoicPkQAudjgqzV3CXkcL0S
-# 9FKgggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQU+Qq9ZQVraxaAi3yRRRoZ2Tzj
+# brygggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
 # 9w0BAQsFADAwMQwwCgYDVQQGEwNMQUIxDTALBgNVBAoTBFpFUk8xETAPBgNVBAMT
 # CFplcm9EQzAxMB4XDTE3MDkyMDIxMDM1OFoXDTE5MDkyMDIxMTM1OFowPTETMBEG
 # CgmSJomT8ixkARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMT
@@ -219,11 +223,11 @@ Function DecryptFile {
 # ARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMTB1plcm9TQ0EC
 # E1gAAAH5oOvjAv3166MAAQAAAfkwCQYFKw4DAhoFAKB4MBgGCisGAQQBgjcCAQwx
 # CjAIoAKAAKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcCAQQwHAYKKwYBBAGC
-# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFF2D2xIGN2kj2Ooy
-# SgauaqIyXmgBMA0GCSqGSIb3DQEBAQUABIIBAGsD3MRxvlwei2RYzbnNiGIEenD2
-# bOC4ObeQJ3JxxAlbxpMB9yA4rrWE+U4ECyIzMsQMCr7vOP4eD3i2awaqAPtT8ZaS
-# 2fDQc1iN1dt3guYYajr57LLSSgrFmp+ioB3OqrbZQZmJiyn/lJyplo0bnkAC784c
-# N75A+QxfqFN9B5pghZag5bzher4xgNhWHt6WKDQdPLtL9HjXJQsCPi6sWhS1zYHl
-# b6X7gB8myBJqn+aFU66dKvanGD44rF2KBk4/k4SI3A1n2xy1c2ocsRsaehSKS2oF
-# M4crCILcLkGkHDqMf8FMRjB7l8uPKIo4DCN0w3Nrh/ALdrK+CAk4L9NQvr8=
+# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFAVKUt0aaWVeOO5F
+# K0L1FXSaVv5JMA0GCSqGSIb3DQEBAQUABIIBAL7J3MAF2xCHrzHUDc1rpDKZutwZ
+# ZP15297MUWskw1gwW8m5vUPsisercLEQKo8S6MwCLMyG3LFZ+hhF1Bx/XQUw+oq1
+# pU+FcCzS1eqrF4NMsnB4gCivmHMGAZskxoiyEiesDiqMqZbxO8X78NhMsb0J6jyB
+# 4Dxy2xbUvKRRmHjaQnAlFMQwglvIeQuJfVWMNEVaTCDUCCqr0oy68IarFv0+COPn
+# ng6YCriLOYWgoLHYEJCe39lxtmVH/WoYB8RtzRw/0ByMAf+aCiADXDXapD2PEqDT
+# 5DkK3aup1VaMj8s5uE8vZ2x9hwOu7mdVPnZ7cC6KOum44dxZEVp+U5BfkKI=
 # SIG # End signature block
