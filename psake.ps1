@@ -131,13 +131,9 @@ if ($ModulesToInstallAndImport.Count -gt 0) {
     Add-Content -Value $FunctionTextToAdd -Path "$env:BHModulePath\$env:BHProjectName.psm1"
 
     # Finally, add array the variables contained in VariableLibrary.ps1 if it exists in case we want to use this Module Remotely
-    $AddVariableLibrary = @'
-if (Test-Path "$PSScriptRoot\VariableLibrary.ps1") {
-    . "$PSScriptRoot\VariableLibrary.ps1"
-}
-'@
-
-    Add-Content -Value $AddVariableLibrary -Path "$env:BHModulePath\$env:BHProjectName.psm1"
+    if (Test-Path "$env:BHModulePath\VariableLibrary.ps1") {
+        Get-Content "$env:BHModulePath\VariableLibrary.ps1" | Add-Content "$env:BHModulePath\$env:BHProjectName.psm1"
+    }
 
     if ($Cert) {
         # At this point the .psm1 is finalized, so let's sign it
@@ -229,8 +225,8 @@ Task Deploy -Depends Build {
 # SIG # Begin signature block
 # MIIMiAYJKoZIhvcNAQcCoIIMeTCCDHUCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUyNKaWeNYeHehx8HDEsde7uoX
-# KQGgggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQU9dQZ9yxzf9CGUpGD9pVMkZS9
+# +e6gggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
 # 9w0BAQsFADAwMQwwCgYDVQQGEwNMQUIxDTALBgNVBAoTBFpFUk8xETAPBgNVBAMT
 # CFplcm9EQzAxMB4XDTE3MDkyMDIxMDM1OFoXDTE5MDkyMDIxMTM1OFowPTETMBEG
 # CgmSJomT8ixkARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMT
@@ -287,11 +283,11 @@ Task Deploy -Depends Build {
 # ARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMTB1plcm9TQ0EC
 # E1gAAAH5oOvjAv3166MAAQAAAfkwCQYFKw4DAhoFAKB4MBgGCisGAQQBgjcCAQwx
 # CjAIoAKAAKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcCAQQwHAYKKwYBBAGC
-# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFPkpyRQ7hMqxaqfq
-# NJJ6stWaaPZrMA0GCSqGSIb3DQEBAQUABIIBABToDSuPSHLUg2DldkGG0YL+Ip7e
-# 13Hcoxl3DncRHBbBwJm0AmemA7lHD/YI3qbMYwIqZ9ybh8BnHDa8r5+Tf+wMMn4D
-# DAOfmHXQljDEGCoWnHDIEuUfLflgGKeAGvKpMCttLTY1mOpJxsxU2TUxtftmU/Xv
-# 9jdk8GcT1E5Ve0a4JpAq9kJ1ItsZUX1byznoG5v4l2xsitUMD9oCjBUhilpxLlB1
-# rAblKcH6aCCyYybl6fMRwEKgOF3htc6qNNCATaiNSx/i8yMQY70skMAFZxcMptXK
-# FDJF0Tn1zqetTvlHurFya8omjw2xdXMDlFXzSBjiuqlqfKRacI1c6V8fCok=
+# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFHEfYu1qHdgVGOWD
+# +0DNqhw4C6y6MA0GCSqGSIb3DQEBAQUABIIBAF/DhXp1X7vHq6lbslkwGB3/Gq2n
+# f4webNKyD2OZG85DUWHNNL/aHiW/4tAVKa8GwRt/wm2o1+Dukmb1jJFH+GzX/J7E
+# KSJAccEOeuYopOU3bXLHJdI/WsidScpMXx0IY39q71Q/+wCT33DfIa1lKWdI/8go
+# r7Ve9tAkygR6kkmSHJ9MNfRQC0k/9+XrZp2RSkcSgW3xiFgYDn49M2f0jcta9ga+
+# ksCkqCZZFOxeW4UnzIACWQXd2H5YwE2L1wCaN4UU1f8feS3j9n/mDDblWoX9Mh+P
+# lEwBgR/41j0iR16d/ZcZ+FoZkmRM2qBpI0JKuW+9rHQ+IVrKB+n7QBUcYow=
 # SIG # End signature block

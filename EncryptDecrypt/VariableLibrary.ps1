@@ -1,5 +1,4 @@
-$FunctionsForSBUseString = @'
-[System.Collections.ArrayList]$FunctionsForSBUse = @(
+[System.Collections.ArrayList]$script:FunctionsForSBUse = @(
     ${Function:NewCryptographyKey}.Ast.Extent.Text 
     ${Function:DecryptFile}.Ast.Extent.Text
     ${Function:EncryptFile}.Ast.Extent.Text
@@ -12,7 +11,6 @@ $FunctionsForSBUseString = @'
     ${Function:New-EncryptedFile}.Ast.Extent.Text
     ${Function:New-SelfSignedCertificateEx}.Ast.Extent.Text
 )
-'@
 
 # Below $opensslkeysource from http://www.jensign.com/opensslkey/index.html
 $opensslkeysource = @'
@@ -1228,8 +1226,8 @@ if(Win32.CertStrToName(X509_ASN_ENCODING, DN, CERT_X500_NAME_STR, IntPtr.Zero, n
 # SIG # Begin signature block
 # MIIMiAYJKoZIhvcNAQcCoIIMeTCCDHUCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUUJ0yVyuKZeXHXXTEHrcr0VlE
-# XF+gggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUiw5a9lRCm9GyyBYu8ckljoV7
+# K3+gggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
 # 9w0BAQsFADAwMQwwCgYDVQQGEwNMQUIxDTALBgNVBAoTBFpFUk8xETAPBgNVBAMT
 # CFplcm9EQzAxMB4XDTE3MDkyMDIxMDM1OFoXDTE5MDkyMDIxMTM1OFowPTETMBEG
 # CgmSJomT8ixkARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMT
@@ -1286,11 +1284,11 @@ if(Win32.CertStrToName(X509_ASN_ENCODING, DN, CERT_X500_NAME_STR, IntPtr.Zero, n
 # ARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMTB1plcm9TQ0EC
 # E1gAAAH5oOvjAv3166MAAQAAAfkwCQYFKw4DAhoFAKB4MBgGCisGAQQBgjcCAQwx
 # CjAIoAKAAKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcCAQQwHAYKKwYBBAGC
-# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFG+6aiLHcZNIP/l8
-# gGyUMdea42e2MA0GCSqGSIb3DQEBAQUABIIBAGXSHeuDUlJF/ikQfgvtpZj4WeJ9
-# aZXEYpO5NRNd6U1vzW4iayE0lT8OEw8Po8bPImzm/sgzHMke3GjrYqL+oLGaSMAh
-# UL5RDi/5sAq8Zudh5HSYrbpQSaGRhnHNRsFA1HyKlHLbPsWRlRa6QQoSG5uTCfli
-# EH958i6YN2S8KhW5n77ocm05lKXeoum8JudNVg4gFtwfNUv4hvvcag03NWEoPhsp
-# 2FU4LDdbNLhQYoWykmQMLgK7isW86wccHYFXCUG4lAFzwULZsfdzG8GrC+orWoo1
-# 0jDbfss6e72oCFlsB5oEKArwAoMiQXnOjtjUgucygiA8UlA7lzRnv+mzoZ8=
+# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFKzc1vJMkKKHfRjA
+# 1r4q4UuJfkdLMA0GCSqGSIb3DQEBAQUABIIBAI0ehU3hszdHJRgvAyKPcYhCkNMH
+# jUCF5mZ69wptuH34KFrlsgNt7cUXtxzckIZVk8GghhAbCaqE0/AfAgxUp4nS4yKN
+# +q/tsyo4mCYpAk0NmyJ/BP2o1DLSBawwpnYfva+S1dz8LjgVTyZEhXftC2uMxWKo
+# LQrHULFle/bAXw+VkhciIyo3b8iDYehU4bpkmkakZ/Nu7MQ2eRZEZljmN6KQ/zDW
+# Mu7IXJRHlWz88AT8LlB+vgsbR7UbTClr+9DxdKo/inLVrL1JMNa6o2KX6gbjYgk6
+# Y84vVJztsTAEIpCCB8K+dmnte+sMnFnW0UK7mrakphpSHYeoSOf3qeJdsXo=
 # SIG # End signature block

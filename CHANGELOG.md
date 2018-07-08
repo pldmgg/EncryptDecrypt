@@ -1,5 +1,9 @@
 # Change log
 
+## 0.8.3 (July 08, 2018)
+
+- Updated psake.
+
 ## 0.8.2 (July 08, 2018)
 
 - Added link to GitHub in Module Manifest description.
