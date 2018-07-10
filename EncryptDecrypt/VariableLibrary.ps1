@@ -13,7 +13,7 @@
 )
 
 # Below $opensslkeysource from http://www.jensign.com/opensslkey/index.html
-$opensslkeysource = @'
+$script:opensslkeysource = @'
 
 //**********************************************************************************
 //
