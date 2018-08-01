@@ -3115,13 +3115,18 @@ function New-SelfSignedCertificateEx {
 
 
 [System.Collections.ArrayList]$script:FunctionsForSBUse = @(
-    ${Function:NewCryptographyKey}.Ast.Extent.Text 
-    ${Function:NewCryptographyKey}.Ast.Extent.Text 
+    ${Function:AddWinRMTrustLocalHost}.Ast.Extent.Text 
     ${Function:DecryptFile}.Ast.Extent.Text
     ${Function:EncryptFile}.Ast.Extent.Text
+    ${Function:GetModuleDependencies}.Ast.Extent.Text
+    ${Function:InvokeModuleDependencies}.Ast.Extent.Text
+    ${Function:InvokePSCompatibility}.Ast.Extent.Text
+    ${Function:ManualPSGalleryModuleInstall}.Ast.Extent.Text
+    ${Function:NewCryptographyKey}.Ast.Extent.Text
+    ${Function:NewUniqueString}.Ast.Extent.Text
     ${Function:UnzipFile}.Ast.Extent.Text
-    ${Function:Get-DecryptedContent}.Ast.Extent.Text
     ${Function:Extract-PfxCerts}.Ast.Extent.Text
+    ${Function:Get-DecryptedContent}.Ast.Extent.Text
     ${Function:Get-EncryptionCert}.Ast.Extent.Text
     ${Function:Get-PfxCertificateBetter}.Ast.Extent.Text
     ${Function:Get-PrivatekeyProperty}.Ast.Extent.Text
@@ -4343,8 +4348,8 @@ if(Win32.CertStrToName(X509_ASN_ENCODING, DN, CERT_X500_NAME_STR, IntPtr.Zero, n
 # SIG # Begin signature block
 # MIIMiAYJKoZIhvcNAQcCoIIMeTCCDHUCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUQ5WNvfJ9Ez+iy+stlfOPu1EI
-# 6MWgggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUA4JeNPm68a1+3yQ3gg6pChu+
+# l2egggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
 # 9w0BAQsFADAwMQwwCgYDVQQGEwNMQUIxDTALBgNVBAoTBFpFUk8xETAPBgNVBAMT
 # CFplcm9EQzAxMB4XDTE3MDkyMDIxMDM1OFoXDTE5MDkyMDIxMTM1OFowPTETMBEG
 # CgmSJomT8ixkARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMT
@@ -4401,11 +4406,11 @@ if(Win32.CertStrToName(X509_ASN_ENCODING, DN, CERT_X500_NAME_STR, IntPtr.Zero, n
 # ARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMTB1plcm9TQ0EC
 # E1gAAAH5oOvjAv3166MAAQAAAfkwCQYFKw4DAhoFAKB4MBgGCisGAQQBgjcCAQwx
 # CjAIoAKAAKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcCAQQwHAYKKwYBBAGC
-# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFPUuwzLBX124jWSh
-# q2fHRZTBT59fMA0GCSqGSIb3DQEBAQUABIIBAL5DN/01MwAEkQhlbC47ooxsZWNL
-# P7EWvTkkSTvYqixiuB7DZKPqxNyWq8hdmzrPo/ngJN7zIQDGHy5EIAfBHF+DP5O9
-# 5ARJvbeKdeKV0ER5B6IOJdh2b+oExsIymi885tQeO/ryYbPvjRNXZf5R79iTv4AP
-# 4dEgj2TpCyyAd6X6FZtjFhsgevm8VhHlwUX2j0QdVCMDlgfvRCWWEAK176Za+u8I
-# IUmBUQE7HS0FM/basQ2Rn1Fs4fJO8G7l90BUyB8btLRdSAzeZMN4eM+rz8Ly+iw+
-# WOqM864xsdg8AJZSjmN5sWeWxUP9/4zOmUff7f8vwh+j2EM0vz/9iONlOrU=
+# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFHx3Lf2MwKNBgY0/
+# RGHhYthQZKHfMA0GCSqGSIb3DQEBAQUABIIBABYwLc+/SCmxDxoRc7Qmqz+VdlmY
+# JkMv2J4dTiCnAXvexBPFerzha4b5t9wRgBlvEGUL9Xm5boSQimr3T0990NsZp9PH
+# NUnvIcSDz1kyeaK6bZkYTkIX7B/TSC27UZ6ZmvBetGkSvGD8wwcc7HvhiHaPqNqq
+# 4mQTKc9LsXWuvzCdzBgk2WB5ZCkHrkeWlcSOeByQDH6h4d2olV+5BbFUiiT6vD0r
+# LowA8T1gDxFhumEh7v8CBeEiLu6GLOcQxzVLp5QdpDHw1HDK2LfqR933U5fmsBSq
+# +286L1KNAoV6C+8GVUdvGUntSJKXvjrEWRnqje8OD/sYh5f6QAWuz/GGUT4=
 # SIG # End signature block

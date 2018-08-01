@@ -55,18 +55,18 @@ Describe -Name "General Project Validation: $env:BHProjectName" -Tag 'Validation
         $Module.Name -eq $env:BHProjectName | Should Be $True
         $Commands = $Module.ExportedCommands.Keys
         $Commands -contains 'AddWinRMTrustLocalHost' | Should Be $False
-        $Commands -contains 'NewCryptographyKey' | Should Be $False
         $Commands -contains 'DecryptFile' | Should Be $False
         $Commands -contains 'EncryptFile' | Should Be $False
         $Commands -contains 'GetModuleDependencies' | Should Be $False
         $Commands -contains 'InvokeModuleDependencies' | Should Be $False
         $Commands -contains 'InvokePSCompatibility' | Should Be $False
-        $Commands -contains 'ConvertSize' | Should Be $False
+        $Commands -contains 'ManualPSGalleryModuleInstall' | Should Be $False
+        $Commands -contains 'NewCryptographyKey' | Should Be $False
         $Commands -contains 'NewUniqueString' | Should Be $False
         $Commands -contains 'UnzipFile' | Should Be $False
         
-        $Commands -contains 'Get-DecryptedContent' | Should Be $True
         $Commands -contains 'Extract-PfxCerts' | Should Be $True
+        $Commands -contains 'Get-DecryptedContent' | Should Be $True
         $Commands -contains 'Get-EncryptionCert' | Should Be $True
         $Commands -contains 'Get-PfxCertificateBetter' | Should Be $True
         $Commands -contains 'Get-PrivateKeyProperty' | Should Be $True
@@ -77,12 +77,13 @@ Describe -Name "General Project Validation: $env:BHProjectName" -Tag 'Validation
     It "Module '$env:BHProjectName' Private Functions Are Available in Internal Scope" {
         $Module = Get-Module $env:BHProjectName
         [bool]$Module.Invoke({Get-Item function:AddWinRMTrustLocalHost}) | Should Be $True
-        [bool]$Module.Invoke({Get-Item function:NewCryptographyKey}) | Should Be $True
         [bool]$Module.Invoke({Get-Item function:DecryptFile}) | Should Be $True
         [bool]$Module.Invoke({Get-Item function:EncryptFile}) | Should Be $True
         [bool]$Module.Invoke({Get-Item function:GetModuleDependencies}) | Should Be $True
         [bool]$Module.Invoke({Get-Item function:InvokeModuleDependencies}) | Should Be $True
         [bool]$Module.Invoke({Get-Item function:InvokePSCompatibility}) | Should Be $True
+        [bool]$Module.Invoke({Get-Item function:ManualPSGalleryModuleInstall}) | Should Be $True
+        [bool]$Module.Invoke({Get-Item function:NewCryptographyKey}) | Should Be $True
         [bool]$Module.Invoke({Get-Item function:NewUniqueString}) | Should Be $True
         [bool]$Module.Invoke({Get-Item function:UnzipFile}) | Should Be $True
     }
@@ -91,8 +92,8 @@ Describe -Name "General Project Validation: $env:BHProjectName" -Tag 'Validation
 # SIG # Begin signature block
 # MIIMiAYJKoZIhvcNAQcCoIIMeTCCDHUCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUO5YRs/Xko7VxzrG7P0L8Zd7U
-# e12gggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUK34ctNy1ZRERYxNXGWA0Fn3T
+# sL2gggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
 # 9w0BAQsFADAwMQwwCgYDVQQGEwNMQUIxDTALBgNVBAoTBFpFUk8xETAPBgNVBAMT
 # CFplcm9EQzAxMB4XDTE3MDkyMDIxMDM1OFoXDTE5MDkyMDIxMTM1OFowPTETMBEG
 # CgmSJomT8ixkARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMT
@@ -149,11 +150,11 @@ Describe -Name "General Project Validation: $env:BHProjectName" -Tag 'Validation
 # ARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMTB1plcm9TQ0EC
 # E1gAAAH5oOvjAv3166MAAQAAAfkwCQYFKw4DAhoFAKB4MBgGCisGAQQBgjcCAQwx
 # CjAIoAKAAKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcCAQQwHAYKKwYBBAGC
-# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFNa9z2vl/2jy2r/S
-# ohMqsrkXP4A6MA0GCSqGSIb3DQEBAQUABIIBAMCB6io5ggA8CAPlZ1Wm78kamNgo
-# 3JxoadXfQK314uVl60trQS8StXpyafNNl2NDfeveb1u2pilDMC1wNukjXNmFdvgG
-# 5Ee262vQ8PbSJtDpOEGelMk4Uk8P4WZcXtWEpzg7MNJbXj22MqX4/438yQD2fGAq
-# IsSr+jSa++rIV67wZYdzXBZClkTAyYmWw88NN+qDVhu/ncsQDQdtSixRa613eiWu
-# xq+aNc+gEkzo57g41JVMpo5MV/7mnE60t71KHH2okGx/RTUZIOHShdy+KyLsG0bk
-# leveFv+eah0hc20oNNHcza93ae6H7bn1pVDopH6tEraoDY6x2L3R5RDJBAY=
+# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFCuhRmovrbH7DxWA
+# 3qF3hHX7VZcjMA0GCSqGSIb3DQEBAQUABIIBAL+ONjlRW29dXXz+amuftZEGnJe9
+# tx7xsJgjP7wFQGGaaN/XV+oHiBdYgX1vP/AM4N9IleVp9lijTkyB8UsKj0mU4Fa4
+# GF0REpX5tBCghO/xdhNJo0+Axdsbl670mMednh8mrcFr7WYCWkTsiP1BxikOztMs
+# +Svel1VwDkNcqbCUEdJgCkfXdCb9t4Ioa1pHSQCBXg7sTST92+P6SUvy2PFvlVWa
+# iioW/IfWhDEr4MFMlAxvUSVtsUSIYAHuPcMO8G6JzMxIiROeaqC4C9QviIpF2VBp
+# Fmm88/vtoZcbZie3Gb1MHI2DedDRslbQ1fe2sQkDOQsV6tAkDsWW86MqzvA=
 # SIG # End signature block
