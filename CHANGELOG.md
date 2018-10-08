@@ -1,5 +1,9 @@
 # Change log
 
+## 0.8.9 (October 8, 2018)
+
+- Metadata update test.
+
 ## 0.8.8 (August 1, 2018)
 
 - Updated WinCompat Private Functions
