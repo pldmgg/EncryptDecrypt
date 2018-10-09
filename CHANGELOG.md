@@ -1,5 +1,9 @@
 # Change log
 
+## 0.9.0 (October 9, 2018)
+
+- Metadata update test.
+
 ## 0.8.9 (October 8, 2018)
 
 - Metadata update test.

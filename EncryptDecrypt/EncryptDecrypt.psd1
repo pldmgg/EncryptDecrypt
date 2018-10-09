@@ -12,13 +12,13 @@
 RootModule = 'EncryptDecrypt.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.8.9'
+ModuleVersion = '0.9.0'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
 
 # ID used to uniquely identify this module
-GUID = '83435dfe-0ce5-4e7f-8b56-b129a739ffe3'
+GUID = '84aaaff8-fecb-4b68-b09d-7e16fcf74d8a'
 
 # Author of this module
 Author = 'pldmgg'
