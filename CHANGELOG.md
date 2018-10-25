@@ -1,5 +1,9 @@
 # Change log
 
+## 0.9.1 (October 9, 2018)
+
+- Fixed logic to find the CN of an existing encryption cert under Cert:\LocalMachine\My
+
 ## 0.9.0 (October 9, 2018)
 
 - Metadata update test.

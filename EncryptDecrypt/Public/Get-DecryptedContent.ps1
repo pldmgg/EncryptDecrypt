@@ -469,7 +469,7 @@ function Get-DecryptedContent {
     
     # Validate CNofCertInStore {
     if ($CNofCertInStore) {
-        [array]$Cert1 = @(Get-ChildItem "Cert:\LocalMachine\My" | Where-Object {$_.Subject -match "CN=$CNofCertInStore,"})
+        [array]$Cert1 = @(Get-ChildItem "Cert:\LocalMachine\My" | Where-Object {$_.Subject -match "CN=$CNofCertInStore,|CN=$CNofCertInStore"})
 
         if ($Cert1.Count -gt 1) {
             Write-Warning "Multiple certificates under 'Cert:\LocalMachine\My' with a CommonName '$CNofCertInStore' have been identified! They are as follows:"
@@ -937,8 +937,8 @@ function Get-DecryptedContent {
 # SIG # Begin signature block
 # MIIMiAYJKoZIhvcNAQcCoIIMeTCCDHUCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUmP9Dx2hmCT5RzivLExaJpOC6
-# L9Ggggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQU32QUqdpJz1cRp87Jz9EKIyxV
+# D86gggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
 # 9w0BAQsFADAwMQwwCgYDVQQGEwNMQUIxDTALBgNVBAoTBFpFUk8xETAPBgNVBAMT
 # CFplcm9EQzAxMB4XDTE3MDkyMDIxMDM1OFoXDTE5MDkyMDIxMTM1OFowPTETMBEG
 # CgmSJomT8ixkARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMT
@@ -995,11 +995,11 @@ function Get-DecryptedContent {
 # ARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMTB1plcm9TQ0EC
 # E1gAAAH5oOvjAv3166MAAQAAAfkwCQYFKw4DAhoFAKB4MBgGCisGAQQBgjcCAQwx
 # CjAIoAKAAKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcCAQQwHAYKKwYBBAGC
-# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFNCXYB0B2ij74Evq
-# WrznS01z4WPpMA0GCSqGSIb3DQEBAQUABIIBAGYI49SJWcCtyvDjGcVcQ13gyfi/
-# /SLqJp+JCq3QFx7Bc2LaLSCKp8/moKeJw2ZwjlmXj+9EBQipKGCxbHrV+dA03vKV
-# n6HP32lYxW47CKk7+cYbCacP6GA4q7ikJuoEh1NHsPl8aE7OhCeHd1tzpn5ATbDV
-# L7yzy2ERH0EIwoaMeoYQMjUMTVjtn+0yUDwlqTI2xW1nWlfrDocVcM5J7bTB/rN4
-# SeebyFGlo+igqNxiYJIQsA6s+O0Id2CwyLHXqB/clux/fMO8ummIlY4bhrBjs2QJ
-# 6ppEuCUp8mNQEvFyO3v+5GUxH5X6CMjuxG7ArC2gH1GFeSpev1Fuu5uMy2k=
+# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFGmyv9L637j0E6EU
+# +u1VbAQqmFRWMA0GCSqGSIb3DQEBAQUABIIBAH5YKxXOg3HiarqZcj9lNtuRkPTk
+# vwQqTTe/QmHyAvk+3Fs7IwWMA3v8aUWjHE9g/RBdR3nERorUS3T7qPJVNuVkoIW+
+# agQQdbB079az+rkEMlBtpMl2Coyxcn++RgD7VY0zQMmfSWVMFZ1VjA7CpEEU381s
+# lNnfzuoWLm9bKN0jVJ6TYd4BNgLYCq1y5dwXi1DpLSbuIdbZF11f+xAQXUKRFswG
+# fgW3orvaCmSFJcnIC36f981jLc+DZ68pUzTwupeJNrQ/p9pWv6lWaU5iRRw/FO3Z
+# Ov6cp3/zZ6c104b7PqNSDNamxuQ3NtuF2tZGcyF64mPdN22l15wfp9cHgfM=
 # SIG # End signature block
