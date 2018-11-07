@@ -520,10 +520,10 @@ function Get-DecryptedContent {
         $null = New-Item -Type Directory -Path $TempOutputDir
         
         if ($CertPwd) {
-            $PrivateKeyInfo = Get-PrivateKeyProperty -CertObject $Cert1 -TempOutputDirectory $TempOutputDir -CertPwd $CertPwd -DownloadAndAddOpenSSLToPath
+            $PrivateKeyInfo = Get-PrivateKeyProperty -CertObject $Cert1[0] -TempOutputDirectory $TempOutputDir -CertPwd $CertPwd -DownloadAndAddOpenSSLToPath
         }
         else {
-            $PrivateKeyInfo = Get-PrivateKeyProperty -CertObject $Cert1 -TempOutputDirectory $TempOutputDir -DownloadAndAddOpenSSLToPath
+            $PrivateKeyInfo = Get-PrivateKeyProperty -CertObject $Cert1[0] -TempOutputDirectory $TempOutputDir -DownloadAndAddOpenSSLToPath
         }
         
         if ($PrivateKeyInfo.KeySize -eq $null) {
@@ -937,8 +937,8 @@ function Get-DecryptedContent {
 # SIG # Begin signature block
 # MIIMiAYJKoZIhvcNAQcCoIIMeTCCDHUCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQU32QUqdpJz1cRp87Jz9EKIyxV
-# D86gggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUvo9euRW7V4CONn3jv3eLap1h
+# 4+Wgggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
 # 9w0BAQsFADAwMQwwCgYDVQQGEwNMQUIxDTALBgNVBAoTBFpFUk8xETAPBgNVBAMT
 # CFplcm9EQzAxMB4XDTE3MDkyMDIxMDM1OFoXDTE5MDkyMDIxMTM1OFowPTETMBEG
 # CgmSJomT8ixkARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMT
@@ -995,11 +995,11 @@ function Get-DecryptedContent {
 # ARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMTB1plcm9TQ0EC
 # E1gAAAH5oOvjAv3166MAAQAAAfkwCQYFKw4DAhoFAKB4MBgGCisGAQQBgjcCAQwx
 # CjAIoAKAAKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcCAQQwHAYKKwYBBAGC
-# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFGmyv9L637j0E6EU
-# +u1VbAQqmFRWMA0GCSqGSIb3DQEBAQUABIIBAH5YKxXOg3HiarqZcj9lNtuRkPTk
-# vwQqTTe/QmHyAvk+3Fs7IwWMA3v8aUWjHE9g/RBdR3nERorUS3T7qPJVNuVkoIW+
-# agQQdbB079az+rkEMlBtpMl2Coyxcn++RgD7VY0zQMmfSWVMFZ1VjA7CpEEU381s
-# lNnfzuoWLm9bKN0jVJ6TYd4BNgLYCq1y5dwXi1DpLSbuIdbZF11f+xAQXUKRFswG
-# fgW3orvaCmSFJcnIC36f981jLc+DZ68pUzTwupeJNrQ/p9pWv6lWaU5iRRw/FO3Z
-# Ov6cp3/zZ6c104b7PqNSDNamxuQ3NtuF2tZGcyF64mPdN22l15wfp9cHgfM=
+# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFGHtIIg1JNdKN0aw
+# Xh/uHkbUcfocMA0GCSqGSIb3DQEBAQUABIIBACHGJ8Zb18DdsgtY9qU2jT+n8zIZ
+# 9jjmkNXBSwXuFwnLuX8C/FLTENZRaj1gHBxclycdIBuxoWBiZ8gbPV221epcxU8a
+# h9gk7KftjHX1cgChMuNxJapSJ4l2pd1K1kYH5ASb+VR6L4GQwmz8j1dtyMg47Ore
+# 7K1wtoLNpsXVuuAYf/URPHDauFtQ7tr9gXZliQNn2uz3vAKbX4H8mdzXqFINbPEa
+# RGOFscUk3HhLIVdO6VVC3IFI3VM8eovTxmW8zYfQdg4bedbJIGNC0aal4VPn7npN
+# tmHq8WNCZhjvqppz6G2eqQIW8k9AARxHt4F4Wqcj2G/+NKB4dFuCzMJoiNM=
 # SIG # End signature block
