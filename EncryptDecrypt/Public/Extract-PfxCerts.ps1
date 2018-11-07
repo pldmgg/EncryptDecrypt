@@ -103,25 +103,49 @@ function Extract-PfxCerts {
     ##### BEGIN Variable/Parameter Transforms and PreRun Prep #####
     # Check for Win32 or Win64 OpenSSL Binary
     if (! $(Get-Command openssl.exe -ErrorAction SilentlyContinue)) {
-        if ($DownloadAndAddOpenSSLToPath) {
-            Write-Host "Downloading openssl.exe from https://indy.fulgan.com/SSL/..."
-            $LatestWin64OpenSSLVer = $($($(Invoke-WebRequest -Uri https://indy.fulgan.com/SSL/).Links | Where-Object {$_.href -like "*[a-z]-x64*"}).href | Sort-Object)[-1]
-            Invoke-WebRequest -Uri "https://indy.fulgan.com/SSL/$LatestWin64OpenSSLVer" -OutFile "$env:USERPROFILE\Downloads\$LatestWin64OpenSSLVer"
-            $SSLDownloadUnzipDir = $(Get-ChildItem "$env:USERPROFILE\Downloads\$LatestWin64OpenSSLVer").BaseName
-            if (! $(Test-Path "$env:USERPROFILE\Downloads\$SSLDownloadUnzipDir")) {
-                New-Item -Path "$env:USERPROFILE\Downloads\$SSLDownloadUnzipDir" -ItemType Directory
-            }
-            UnzipFile -PathToZip "$env:USERPROFILE\Downloads\$LatestWin64OpenSSLVer" -TargetDir "$env:USERPROFILE\Downloads\$SSLDownloadUnzipDir"
-            # Add OpenSSL to $env:Path
-            if ($env:Path[-1] -eq ";") {
-                $env:Path = "$env:Path$env:USERPROFILE\Downloads\$SSLDownloadUnzipDir"
-            }
-            else {
-                $env:Path = "$env:Path;$env:USERPROFILE\Downloads\$SSLDownloadUnzipDir"
-            }
+        Write-Host "Downloading openssl.exe from http://wiki.overbyte.eu/wiki/index.php/ICS_Download..."
+        [Net.ServicePointManager]::SecurityProtocol = "tls12, tls11, tls"
+        $OpenSSLWinBinariesUrl = "http://wiki.overbyte.eu/wiki/index.php/ICS_Download"
+        $IWRResult = Invoke-WebRequest -Uri $OpenSSLWinBinariesUrl -ErrorAction Stop
+        $LatestOpenSSLWinBinaryLinkObj = $($IWRResult.Links | Where-Object {$_.innerText -match "OpenSSL Binaries" -and $_.href -match "\.zip"})[0]
+        $LatestOpenSSLWinBinaryUrl = $LatestOpenSSLWinBinaryLinkObj.href
+        $OutputFileName = $($LatestOpenSSLWinBinaryUrl -split '/')[-1]
+        $OutputFilePath = "$HOME\Downloads\$OutputFileName"
+        Invoke-WebRequest -Uri $LatestOpenSSLWinBinaryUrl -OutFile $OutputFilePath
+
+        if (!$(Test-Path "$HOME\Downloads\$OutputFileName")) {
+            Write-Error "Problem downloading the latest OpenSSL Windows Binary from $LatestOpenSSLWinBinaryUrl ! Halting!"
+            $global:FunctionResult = "1"
+            return
+        }
+
+        $OutputFileItem = Get-Item $OutputFilePath
+        $ExpansionDirectory = $OutputFileItem.Directory.FullName + "\" + $OutputFileItem.BaseName
+        if (!$(Test-Path $ExpansionDirectory)) {
+            $null = New-Item -ItemType Directory -Path $ExpansionDirectory -Force
         }
         else {
-            Write-Error "The Extract-PFXCerts function requires openssl.exe. Openssl.exe cannot be found on this machine. Use the -DownloadAndAddOpenSSLToPath parameter to download openssl.exe and add it to `$env:Path. NOTE: Openssl.exe does NOT require installation. Halting!"
+            Remove-Item "$ExpansionDirectory\*" -Recurse -Force
+        }
+
+        $null = Expand-Archive -Path "$HOME\Downloads\$OutputFileName" -DestinationPath $ExpansionDirectory -Force
+
+        $FilesToCopy = Get-ChildItem -Path $ExpansionDirectory -File | Where-Object {$_.Name -notmatch "LICENSE" -and $_.Name -notmatch "readme"}
+        foreach ($filetocopy in $FilesToCopy) {
+            Copy-Item -Path "$($filetocopy.FullName)" -Destination "$SystemRoot\$($filetocopy.Name)" -Force
+        }
+        
+        # Add $ExpansionDirectory to $env:Path
+        <#
+        $CurrentEnvPathArray = $env:Path -split ";"
+        if ($CurrentEnvPathArray -notcontains $ExpansionDirectory) {
+            # Place $ExpansionDirectory at start so latest openssl.exe get priority
+            $env:Path = "$ExpansionDirectory;$env:Path"
+        }
+        #>
+
+        if (![bool]$(Get-Command openssl -ErrorAction SilentlyContinue)) {
+            Write-Error "Problem finding setting openssl after install! Halting!"
             $global:FunctionResult = "1"
             return
         }
@@ -416,8 +440,8 @@ function Extract-PfxCerts {
 # SIG # Begin signature block
 # MIIMiAYJKoZIhvcNAQcCoIIMeTCCDHUCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUkM55m9nYv3laVG2LV7+KzzKJ
-# 9iCgggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUKGOrQZWtEpVtO7iOF8Yo+X28
+# Q7Wgggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
 # 9w0BAQsFADAwMQwwCgYDVQQGEwNMQUIxDTALBgNVBAoTBFpFUk8xETAPBgNVBAMT
 # CFplcm9EQzAxMB4XDTE3MDkyMDIxMDM1OFoXDTE5MDkyMDIxMTM1OFowPTETMBEG
 # CgmSJomT8ixkARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMT
@@ -474,11 +498,11 @@ function Extract-PfxCerts {
 # ARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMTB1plcm9TQ0EC
 # E1gAAAH5oOvjAv3166MAAQAAAfkwCQYFKw4DAhoFAKB4MBgGCisGAQQBgjcCAQwx
 # CjAIoAKAAKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcCAQQwHAYKKwYBBAGC
-# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFLWsTFgQpytV+wWF
-# Jb7FmrJqjZW8MA0GCSqGSIb3DQEBAQUABIIBAIPtvFVYRxRfAV8m6MdPenAoWV9d
-# AZFn67V59GSHBAuAFYA4oapY2cyGygAX/vQDS8cUTjQMILPTly9C+zvWNmkXdBRs
-# t7Om2Bu+si9zXr6hTUlZE8bUingDYF/mtgIvqgOS+TOdSuMP2J9Mw33+yDV7jPCd
-# MybIYdfgb/S5zxP28KJ4A/9GYK+Yeqz2ceD4ZU0rOH15n2opvNgMPnmowy5+OaLG
-# SPhXOppUrnTNPU+A7cLwFaOj7Bki12Zi4iq0KN0FbI4mOD37XvaA0QVaA9Ngykrm
-# i5CU5XCPXwJ/r2HStsjUjZ63Jug/KWcD6P6n/RNSYOFMp1A+e7E2lh38kzo=
+# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFJurgkNz7oFuZ9OJ
+# UcNZpbhNTMVhMA0GCSqGSIb3DQEBAQUABIIBAIH8VS/NnqEdMFijCQKL3Krv2kXI
+# WYD5SXSHmYWe1+abgRlibOL5nlwX3DbpRuA43T0CRqIXJmA8O+Smu9PDboijZO2p
+# SnQl2yeN1xHxzwCKbyAmfDPb77Vfm7mESzBcXHAZMEBlzZaLjB3rWPiDPO59xFjl
+# sggjQCKCRNCS+k5bSpIk9GN31SKOIYth2TMG9GBBthQV9rO2hop2skugq5xA72M1
+# VuSfnWssu4tWa6P6vshIDEdTG+la12Zh8mRbcF+i8rS9x9AXvMlPYOE7pVjOoQaA
+# i/D8WaODGVqvRL9eI1R/E4VMEhyZ1ABxVrytgJ9W367OyLHqxMspD9dwaew=
 # SIG # End signature block

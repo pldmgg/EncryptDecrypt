@@ -1,8 +1,12 @@
 # Change log
 
+## 0.9.3 (November 7, 2018)
+
+- Changed openssl version to 1.1.1
+
 ## 0.9.2 (November 7, 2018)
 
-- Fixed logic to find the CN of an existing encryption cert under Cert:\LocalMachine\My
+- Minor updates
 
 ## 0.9.1 (October 25, 2018)
 

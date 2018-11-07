@@ -141,25 +141,49 @@ function Extract-PfxCerts {
     ##### BEGIN Variable/Parameter Transforms and PreRun Prep #####
     # Check for Win32 or Win64 OpenSSL Binary
     if (! $(Get-Command openssl.exe -ErrorAction SilentlyContinue)) {
-        if ($DownloadAndAddOpenSSLToPath) {
-            Write-Host "Downloading openssl.exe from https://indy.fulgan.com/SSL/..."
-            $LatestWin64OpenSSLVer = $($($(Invoke-WebRequest -Uri https://indy.fulgan.com/SSL/).Links | Where-Object {$_.href -like "*[a-z]-x64*"}).href | Sort-Object)[-1]
-            Invoke-WebRequest -Uri "https://indy.fulgan.com/SSL/$LatestWin64OpenSSLVer" -OutFile "$env:USERPROFILE\Downloads\$LatestWin64OpenSSLVer"
-            $SSLDownloadUnzipDir = $(Get-ChildItem "$env:USERPROFILE\Downloads\$LatestWin64OpenSSLVer").BaseName
-            if (! $(Test-Path "$env:USERPROFILE\Downloads\$SSLDownloadUnzipDir")) {
-                New-Item -Path "$env:USERPROFILE\Downloads\$SSLDownloadUnzipDir" -ItemType Directory
-            }
-            UnzipFile -PathToZip "$env:USERPROFILE\Downloads\$LatestWin64OpenSSLVer" -TargetDir "$env:USERPROFILE\Downloads\$SSLDownloadUnzipDir"
-            # Add OpenSSL to $env:Path
-            if ($env:Path[-1] -eq ";") {
-                $env:Path = "$env:Path$env:USERPROFILE\Downloads\$SSLDownloadUnzipDir"
-            }
-            else {
-                $env:Path = "$env:Path;$env:USERPROFILE\Downloads\$SSLDownloadUnzipDir"
-            }
+        Write-Host "Downloading openssl.exe from http://wiki.overbyte.eu/wiki/index.php/ICS_Download..."
+        [Net.ServicePointManager]::SecurityProtocol = "tls12, tls11, tls"
+        $OpenSSLWinBinariesUrl = "http://wiki.overbyte.eu/wiki/index.php/ICS_Download"
+        $IWRResult = Invoke-WebRequest -Uri $OpenSSLWinBinariesUrl -ErrorAction Stop
+        $LatestOpenSSLWinBinaryLinkObj = $($IWRResult.Links | Where-Object {$_.innerText -match "OpenSSL Binaries" -and $_.href -match "\.zip"})[0]
+        $LatestOpenSSLWinBinaryUrl = $LatestOpenSSLWinBinaryLinkObj.href
+        $OutputFileName = $($LatestOpenSSLWinBinaryUrl -split '/')[-1]
+        $OutputFilePath = "$HOME\Downloads\$OutputFileName"
+        Invoke-WebRequest -Uri $LatestOpenSSLWinBinaryUrl -OutFile $OutputFilePath
+
+        if (!$(Test-Path "$HOME\Downloads\$OutputFileName")) {
+            Write-Error "Problem downloading the latest OpenSSL Windows Binary from $LatestOpenSSLWinBinaryUrl ! Halting!"
+            $global:FunctionResult = "1"
+            return
+        }
+
+        $OutputFileItem = Get-Item $OutputFilePath
+        $ExpansionDirectory = $OutputFileItem.Directory.FullName + "\" + $OutputFileItem.BaseName
+        if (!$(Test-Path $ExpansionDirectory)) {
+            $null = New-Item -ItemType Directory -Path $ExpansionDirectory -Force
         }
         else {
-            Write-Error "The Extract-PFXCerts function requires openssl.exe. Openssl.exe cannot be found on this machine. Use the -DownloadAndAddOpenSSLToPath parameter to download openssl.exe and add it to `$env:Path. NOTE: Openssl.exe does NOT require installation. Halting!"
+            Remove-Item "$ExpansionDirectory\*" -Recurse -Force
+        }
+
+        $null = Expand-Archive -Path "$HOME\Downloads\$OutputFileName" -DestinationPath $ExpansionDirectory -Force
+
+        $FilesToCopy = Get-ChildItem -Path $ExpansionDirectory -File | Where-Object {$_.Name -notmatch "LICENSE" -and $_.Name -notmatch "readme"}
+        foreach ($filetocopy in $FilesToCopy) {
+            Copy-Item -Path "$($filetocopy.FullName)" -Destination "$SystemRoot\$($filetocopy.Name)" -Force
+        }
+        
+        # Add $ExpansionDirectory to $env:Path
+        <#
+        $CurrentEnvPathArray = $env:Path -split ";"
+        if ($CurrentEnvPathArray -notcontains $ExpansionDirectory) {
+            # Place $ExpansionDirectory at start so latest openssl.exe get priority
+            $env:Path = "$ExpansionDirectory;$env:Path"
+        }
+        #>
+
+        if (![bool]$(Get-Command openssl -ErrorAction SilentlyContinue)) {
+            Write-Error "Problem finding setting openssl after install! Halting!"
             $global:FunctionResult = "1"
             return
         }
@@ -4348,8 +4372,8 @@ if(Win32.CertStrToName(X509_ASN_ENCODING, DN, CERT_X500_NAME_STR, IntPtr.Zero, n
 # SIG # Begin signature block
 # MIIMiAYJKoZIhvcNAQcCoIIMeTCCDHUCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUDtekbnF9dRbr36qeV5XCnnJ5
-# fd6gggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUobCl0ZeXJ0Ruu3AuGXfkknLg
+# Hh+gggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
 # 9w0BAQsFADAwMQwwCgYDVQQGEwNMQUIxDTALBgNVBAoTBFpFUk8xETAPBgNVBAMT
 # CFplcm9EQzAxMB4XDTE3MDkyMDIxMDM1OFoXDTE5MDkyMDIxMTM1OFowPTETMBEG
 # CgmSJomT8ixkARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMT
@@ -4406,11 +4430,11 @@ if(Win32.CertStrToName(X509_ASN_ENCODING, DN, CERT_X500_NAME_STR, IntPtr.Zero, n
 # ARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMTB1plcm9TQ0EC
 # E1gAAAH5oOvjAv3166MAAQAAAfkwCQYFKw4DAhoFAKB4MBgGCisGAQQBgjcCAQwx
 # CjAIoAKAAKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcCAQQwHAYKKwYBBAGC
-# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFDGR9ziXq7Jz3F4k
-# D14DTuV50NgHMA0GCSqGSIb3DQEBAQUABIIBAJIHO9MOphhHh+9JJiUdpfY/zu+F
-# pY4eF175C8SwyFtcebhKtio99AwcoiUQy93UWFdTx5lCBlEkk0lN7246E/FTIbFK
-# afy689yGQTgPXtTcHqQ4iURBaVHOA26jS1c+0aJEof+9xe5Fvw155eEtrrYKvTna
-# yBITPI9IL4lFhZbTDVWQYdqXo3Ey1/22ikdG1vAApFYWr9onBXNe+U/qG+D30THv
-# OwZqJIv7CHbFsNF+uEn7rn92gLRBzMzr6gZkPdLQeNACsDAgigRbF8UsDmCp4Gkk
-# 5dZKy70FFSPBtuvuCBDJGq8Y/bAWXAXJi3VcfoarzO33Mfgk/nfk2ucsoEs=
+# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFLxmCTKN+UDn9fmO
+# dnZtAI7JFlt0MA0GCSqGSIb3DQEBAQUABIIBAHYBX/n1ClFVMQG8obXONpEANQcb
+# ot5LZs+XAQI+PCIFzSKA47hQWeC/Tfk0RpULpNxbAZQTIrAxCYRdgApkTb2denxt
+# TbfpMc7OsI2H0CUoifr2Gp9bOWFk1hBgSqT0Pas1P4Idn/nzSBYXyRT1xo4kqs9X
+# gumTOlBTfxPGP90eiebyTezr2ilxv4cxHjbrRqXily8IW53Pna06Ky0u0P4txctG
+# Keb3SUDsNZRB1YyHBff45XkA8kD0KpnCFixiF4U3QzN6kZyJOUjA05myuAFWsGQ1
+# KEsFl9M9D6/EpqIRH0y4fLHxW2ucg4ur/fq4mbWFRtfq6xQA0ALMB0qJOqw=
 # SIG # End signature block
