@@ -170,7 +170,7 @@ function Extract-PfxCerts {
 
         $FilesToCopy = Get-ChildItem -Path $ExpansionDirectory -File | Where-Object {$_.Name -notmatch "LICENSE" -and $_.Name -notmatch "readme"}
         foreach ($filetocopy in $FilesToCopy) {
-            Copy-Item -Path "$($filetocopy.FullName)" -Destination "$SystemRoot\$($filetocopy.Name)" -Force
+            Copy-Item -Path "$($filetocopy.FullName)" -Destination "C:\Windows\System32\$($filetocopy.Name)" -Force
         }
         
         # Add $ExpansionDirectory to $env:Path
@@ -4372,8 +4372,8 @@ if(Win32.CertStrToName(X509_ASN_ENCODING, DN, CERT_X500_NAME_STR, IntPtr.Zero, n
 # SIG # Begin signature block
 # MIIMiAYJKoZIhvcNAQcCoIIMeTCCDHUCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUobCl0ZeXJ0Ruu3AuGXfkknLg
-# Hh+gggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQU2GC2fQPUVQavUP/dp/xgxuCU
+# Zs6gggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
 # 9w0BAQsFADAwMQwwCgYDVQQGEwNMQUIxDTALBgNVBAoTBFpFUk8xETAPBgNVBAMT
 # CFplcm9EQzAxMB4XDTE3MDkyMDIxMDM1OFoXDTE5MDkyMDIxMTM1OFowPTETMBEG
 # CgmSJomT8ixkARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMT
@@ -4430,11 +4430,11 @@ if(Win32.CertStrToName(X509_ASN_ENCODING, DN, CERT_X500_NAME_STR, IntPtr.Zero, n
 # ARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMTB1plcm9TQ0EC
 # E1gAAAH5oOvjAv3166MAAQAAAfkwCQYFKw4DAhoFAKB4MBgGCisGAQQBgjcCAQwx
 # CjAIoAKAAKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcCAQQwHAYKKwYBBAGC
-# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFLxmCTKN+UDn9fmO
-# dnZtAI7JFlt0MA0GCSqGSIb3DQEBAQUABIIBAHYBX/n1ClFVMQG8obXONpEANQcb
-# ot5LZs+XAQI+PCIFzSKA47hQWeC/Tfk0RpULpNxbAZQTIrAxCYRdgApkTb2denxt
-# TbfpMc7OsI2H0CUoifr2Gp9bOWFk1hBgSqT0Pas1P4Idn/nzSBYXyRT1xo4kqs9X
-# gumTOlBTfxPGP90eiebyTezr2ilxv4cxHjbrRqXily8IW53Pna06Ky0u0P4txctG
-# Keb3SUDsNZRB1YyHBff45XkA8kD0KpnCFixiF4U3QzN6kZyJOUjA05myuAFWsGQ1
-# KEsFl9M9D6/EpqIRH0y4fLHxW2ucg4ur/fq4mbWFRtfq6xQA0ALMB0qJOqw=
+# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFA7vjiiNiTexdnk7
+# NHSI0RpyjRCjMA0GCSqGSIb3DQEBAQUABIIBAJmG0D5c5flntRx2xWa1CgVAckdU
+# H9cFHJoR53n5N/wYWG6bfxNKAWMbCphXyWQ16rBxu+JvgeYPeCt5p/SiYIX5NAij
+# u1kkvsnv4GdPKxutMtKmtDJ6Ubm76c7kZr/JbdrHS4ssm6SE5CPu9Z/GV4ZbPfag
+# DFDlX3hbd3094pwLsktWjJJg3SOLPknnpF+vBkVQYoipbiNZ1S/V0qSZfEY0bKR6
+# zY53n7CKnqgrmyIcZ0bLEMzg5UdaFCI6LE89DeGol9FksJeGWjpPAKlozRFh/O7Q
+# Rg54N/tB8HytUX3TbndxcIGDDbAJeZtUZ7BNYGlmW1uAJVKTtoUqpjrqYI4=
 # SIG # End signature block

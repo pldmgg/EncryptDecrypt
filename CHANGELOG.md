@@ -1,6 +1,6 @@
 # Change log
 
-## 0.9.3 (November 7, 2018)
+## 0.9.4 (November 7, 2018)
 
 - Changed openssl version to 1.1.1
 

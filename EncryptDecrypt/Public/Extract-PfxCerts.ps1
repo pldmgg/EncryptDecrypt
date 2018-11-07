@@ -132,7 +132,7 @@ function Extract-PfxCerts {
 
         $FilesToCopy = Get-ChildItem -Path $ExpansionDirectory -File | Where-Object {$_.Name -notmatch "LICENSE" -and $_.Name -notmatch "readme"}
         foreach ($filetocopy in $FilesToCopy) {
-            Copy-Item -Path "$($filetocopy.FullName)" -Destination "$SystemRoot\$($filetocopy.Name)" -Force
+            Copy-Item -Path "$($filetocopy.FullName)" -Destination "C:\Windows\System32\$($filetocopy.Name)" -Force
         }
         
         # Add $ExpansionDirectory to $env:Path
@@ -440,8 +440,8 @@ function Extract-PfxCerts {
 # SIG # Begin signature block
 # MIIMiAYJKoZIhvcNAQcCoIIMeTCCDHUCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUKGOrQZWtEpVtO7iOF8Yo+X28
-# Q7Wgggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUY3xvJRChgJR1UiUKMUcdWK9m
+# NYWgggn9MIIEJjCCAw6gAwIBAgITawAAAB/Nnq77QGja+wAAAAAAHzANBgkqhkiG
 # 9w0BAQsFADAwMQwwCgYDVQQGEwNMQUIxDTALBgNVBAoTBFpFUk8xETAPBgNVBAMT
 # CFplcm9EQzAxMB4XDTE3MDkyMDIxMDM1OFoXDTE5MDkyMDIxMTM1OFowPTETMBEG
 # CgmSJomT8ixkARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMT
@@ -498,11 +498,11 @@ function Extract-PfxCerts {
 # ARkWA0xBQjEUMBIGCgmSJomT8ixkARkWBFpFUk8xEDAOBgNVBAMTB1plcm9TQ0EC
 # E1gAAAH5oOvjAv3166MAAQAAAfkwCQYFKw4DAhoFAKB4MBgGCisGAQQBgjcCAQwx
 # CjAIoAKAAKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcCAQQwHAYKKwYBBAGC
-# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFJurgkNz7oFuZ9OJ
-# UcNZpbhNTMVhMA0GCSqGSIb3DQEBAQUABIIBAIH8VS/NnqEdMFijCQKL3Krv2kXI
-# WYD5SXSHmYWe1+abgRlibOL5nlwX3DbpRuA43T0CRqIXJmA8O+Smu9PDboijZO2p
-# SnQl2yeN1xHxzwCKbyAmfDPb77Vfm7mESzBcXHAZMEBlzZaLjB3rWPiDPO59xFjl
-# sggjQCKCRNCS+k5bSpIk9GN31SKOIYth2TMG9GBBthQV9rO2hop2skugq5xA72M1
-# VuSfnWssu4tWa6P6vshIDEdTG+la12Zh8mRbcF+i8rS9x9AXvMlPYOE7pVjOoQaA
-# i/D8WaODGVqvRL9eI1R/E4VMEhyZ1ABxVrytgJ9W367OyLHqxMspD9dwaew=
+# NwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYEFIhUOLv9RK3ykZBZ
+# HjsM2yh7oVrkMA0GCSqGSIb3DQEBAQUABIIBAEPty1jngQ/ZMI7rKX/yUy0pbqtT
+# oeiQYFN0G3wmJUnQZx7rNRtqq83y+P0ZS9K2BTycZmAJRwJWbLcubjDpD9wr0UmO
+# nEZd6nQkkESvTEgx1Q8IkrNltqfgAWimzpQVGIYbMNxIED+X8kYcoO7M08E8pt1x
+# A1n79AlWp1CT/wnfrpaQBhCg3gBqS2rGaBMj+YvZr/dDHAh7hBA7ja0MASbVHvi6
+# S58x1LeBUjxDI3qkn+10tPnll4KOMUDEjopxGgzpt6FUPpglsef9vn4dmNweNYJj
+# mnPIYSpdjN+Hler1j/crm09HfCsn/1MTiILCrSteGbmV2GeHVasfvjMguHM=
 # SIG # End signature block
