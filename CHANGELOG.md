@@ -1,5 +1,9 @@
 # Change log
 
+## 0.9.5 (November 14, 2018)
+
+- Fix Authenticode Signature Attempt 1
+
 ## 0.9.4 (November 7, 2018)
 
 - Changed openssl version to 1.1.1
