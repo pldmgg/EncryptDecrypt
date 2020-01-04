@@ -1,5 +1,9 @@
 # Change log
 
+## 0.9.6 (January 3, 2020)
+
+- Updated Extract-PfxCerts function
+
 ## 0.9.5 (November 14, 2018)
 
 - Fix Authenticode Signature Attempt 1
